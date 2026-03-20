@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>IRON PUMP — Elite Training System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root{--void:#0a0a0f;--graphite:#12121a;--panel:#1f1f2e;--surface:#252532;--hover:#2a2a3a;--text1:#fff;--text2:rgba(255,255,255,.7);--text3:rgba(255,255,255,.5);--text4:rgba(255,255,255,.3);--cyan:#00d4ff;--blue:#0066ff;--violet:#6b5eff;--green:#00ff88;--amber:#ffaa00;--red:#ff4466;--gcyan:linear-gradient(135deg,#00d4ff,#0066ff);--gviolet:linear-gradient(135deg,#6b5eff,#4433dd);--gamber:linear-gradient(135deg,#ffaa00,#ff6600);--ggreen:linear-gradient(135deg,#00ff88,#00cc66);--glass:rgba(26,26,36,.8);--border:rgba(255,255,255,.08);--glow:rgba(255,255,255,.05);--font:'Space Grotesk',-apple-system,sans-serif;--mono:'JetBrains Mono','SF Mono',monospace}
+        *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+        html{font-size:16px;-webkit-font-smoothing:antialiased}
+        body{font-family:var(--font);background:var(--void);color:var(--text1);line-height:1.5;min-height:100vh;overflow-x:hidden}
+        ::-webkit-scrollbar{width:0;height:0}
+
+        .loading-screen{position:fixed;inset:0;background:var(--void);display:flex;align-items:center;justify-content:center;z-index:9999;transition:opacity .6s,visibility .6s}
+        .loading-screen.hidden{opacity:0;visibility:hidden;pointer-events:none}
+        .loading-logo{position:relative;width:120px;height:120px;margin:0 auto 24px}
+        .loading-ring{width:100%;height:100%;transform:rotate(-90deg)}
+        .loading-ring-bg{fill:none;stroke:var(--panel);stroke-width:4}
+        .loading-ring-fill{fill:none;stroke:var(--cyan);stroke-width:4;stroke-linecap:round;stroke-dasharray:283;stroke-dashoffset:283;animation:lp 2s ease-out forwards,lg 2s ease-in-out infinite}
+        @keyframes lp{to{stroke-dashoffset:0}}
+        @keyframes lg{0%,100%{filter:drop-shadow(0 0 8px var(--cyan))}50%{filter:drop-shadow(0 0 20px var(--cyan))}}
+        .loading-text{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:1.1rem;font-weight:700;letter-spacing:.2em;color:var(--cyan);text-shadow:0 0 20px var(--cyan)}
+        .loading-status{text-align:center;font-size:.85rem;color:var(--text3);animation:pulse 1.5s ease-in-out infinite}
+        @keyframes pulse{0%,100%{opacity:.5}50%{opacity:1}}
+
+        .app{min-height:100vh;padding-bottom:90px;opacity:0;transform:translateY(10px);transition:opacity .6s,transform .6s}
+        .app.loaded{opacity:1;transform:translateY(0)}
+
+        .header{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:14px 20px;background:linear-gradient(180deg,var(--void) 60%,transparent);backdrop-filter:blur(20px)}
+        .logo{display:flex;align-items:center;gap:8px}
+        .logo-icon{width:28px;height:28px;color:var(--cyan);filter:drop-shadow(0 0 10px var(--cyan))}
+        .logo-text{font-size:1.15rem;font-weight:700;letter-spacing:.1em}
+        .logo-accent{color:var(--cyan);text-shadow:0 0 20px var(--cyan)}
+        .live-badge{display:flex;align-items:center;gap:4px;padding:4px 10px;background:rgba(0,255,136,.1);border:1px solid rgba(0,255,136,.3);border-radius:999px}
+        .live-dot{width:6px;height:6px;background:var(--green);border-radius:50%;animation:ldot 2s ease-in-out infinite}
+        @keyframes ldot{0%,100%{box-shadow:0 0 0 0 rgba(0,255,136,.5)}50%{box-shadow:0 0 0 6px rgba(0,255,136,0)}}
+        .live-text{font-size:.7rem;font-weight:600;color:var(--green);letter-spacing:.1em}
+
+        .bottom-nav{position:fixed;bottom:0;left:0;right:0;display:flex;justify-content:space-around;padding:6px 10px;padding-bottom:calc(6px + env(safe-area-inset-bottom,0));background:rgba(10,10,15,.95);backdrop-filter:blur(20px);border-top:1px solid var(--border);z-index:100}
+        .bnav{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 8px;background:0;border:0;color:var(--text4);font-family:var(--font);font-size:.6rem;cursor:pointer;transition:all .3s;position:relative}
+        .bnav svg{width:22px;height:22px;transition:all .3s}
+        .bnav.active{color:var(--cyan)}
+        .bnav.active svg{filter:drop-shadow(0 0 10px var(--cyan))}
+        .bnav.active::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:20px;height:2px;background:var(--cyan);border-radius:999px;box-shadow:0 0 10px var(--cyan)}
+
+        .page{display:none;padding:0 20px;animation:fadeUp .4s ease}
+        .page.active{display:block}
+        @keyframes fadeUp{from{opacity:0;transform:translateY(15px)}to{opacity:1;transform:translateY(0)}}
+
+        .section-header{margin-bottom:20px}
+        .section-header h2{font-size:1.4rem;font-weight:600;margin-bottom:4px}
+        .section-header p{color:var(--text3);font-size:.85rem}
+
+        .hero-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:24px}
+        .hero-card{display:flex;flex-direction:column;align-items:center;text-align:center;padding:12px;background:var(--glass);border:1px solid var(--border);border-radius:16px;backdrop-filter:blur(20px)}
+        .cprog{position:relative;width:75px;height:75px;margin-bottom:6px}
+        .cprog svg{width:100%;height:100%;transform:rotate(-90deg)}
+        .cprog-bg{fill:none;stroke:var(--panel);stroke-width:8}
+        .cprog-ring{fill:none;stroke-width:8;stroke-linecap:round;stroke-dasharray:251;stroke-dashoffset:251;transition:stroke-dashoffset 1.5s cubic-bezier(.4,0,.2,1)}
+        .cprog-ring.cyan{stroke:var(--cyan);filter:drop-shadow(0 0 8px rgba(0,212,255,.5))}
+        .cprog-ring.green{stroke:var(--green);filter:drop-shadow(0 0 8px rgba(0,255,136,.5))}
+        .cprog-ring.amber{stroke:var(--amber);filter:drop-shadow(0 0 8px rgba(255,170,0,.5))}
+        .cprog-val{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);display:flex;align-items:baseline;gap:1px}
+        .cprog-num{font-family:var(--mono);font-size:1.2rem;font-weight:700}
+        .cprog-pct{font-size:.6rem;color:var(--text3)}
+        .hero-card h3{font-size:.7rem;font-weight:600}
+        .hero-card p{font-size:.58rem;color:var(--text3)}
+
+        .mgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:24px}
+        .mcard{position:relative;padding:16px;background:var(--glass);border:1px solid var(--border);border-radius:16px;backdrop-filter:blur(20px);overflow:hidden}
+        .mcard::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+        .mcard.mc::before{background:var(--gcyan)}
+        .mcard.mv::before{background:var(--gviolet)}
+        .mcard.ma::before{background:var(--gamber)}
+        .mcard.mg::before{background:var(--ggreen)}
+        .mcard-icon{width:26px;height:26px;margin-bottom:6px}
+        .mcard-icon svg{width:100%;height:100%}
+        .mc .mcard-icon{color:var(--cyan)}
+        .mv .mcard-icon{color:var(--violet)}
+        .ma .mcard-icon{color:var(--amber)}
+        .mg .mcard-icon{color:var(--green)}
+        .mcard-data{display:flex;align-items:baseline;gap:4px;margin-bottom:2px}
+        .mcard-val{font-family:var(--mono);font-size:1.5rem;font-weight:700}
+        .mcard-unit{font-size:.75rem;color:var(--text3)}
+        .mcard-label{display:block;font-size:.7rem;color:var(--text3);margin-bottom:6px}
+        .mcard-trend{display:flex;align-items:center;gap:4px;font-size:.7rem;font-weight:500}
+        .mcard-trend svg{width:13px;height:13px}
+        .mcard-trend.pos{color:var(--green)}
+        .mcard-trend.neu{color:var(--amber)}
+
+        .chart-card{background:var(--glass);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:24px;backdrop-filter:blur(20px)}
+        .chart-head{margin-bottom:14px}
+        .chart-head h3{font-size:.95rem;font-weight:600;margin-bottom:2px}
+        .chart-head p{font-size:.72rem;color:var(--text3)}
+        .chart-box{position:relative;height:200px}
+        .chart-box canvas{width:100%!important;height:100%!important}
+
+        /* Execute Styles */
+        .start-card{background:var(--glass);border:1px solid var(--border);border-radius:16px;padding:32px 20px;text-align:center;backdrop-filter:blur(20px)}
+        .start-card .start-icon{width:70px;height:70px;margin:0 auto 20px;color:var(--cyan);filter:drop-shadow(0 0 20px var(--cyan))}
+        .start-card .start-icon svg{width:100%;height:100%}
+        .start-card h3{font-size:1.4rem;font-weight:600;margin-bottom:4px}
+        .start-card>p{color:var(--text3);margin-bottom:24px}
+        .split-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+        .split-btn{display:flex;flex-direction:column;align-items:center;gap:6px;padding:16px 8px;background:var(--panel);border:2px solid var(--border);border-radius:16px;color:var(--text1);font-family:var(--font);cursor:pointer;transition:all .3s}
+        .split-btn:hover,.split-btn:active{border-color:var(--cyan);background:var(--surface);transform:translateY(-3px);box-shadow:0 0 30px rgba(0,212,255,.3)}
+        .split-emoji{font-size:1.8rem}
+        .split-name{font-size:.75rem;font-weight:600}
+
+        .hidden{display:none!important}
+
+        .wo-header{display:flex;justify-content:space-between;align-items:center;padding:16px;background:var(--glass);border:1px solid var(--border);border-radius:16px;margin-bottom:16px;backdrop-filter:blur(20px)}
+        .wo-info h3{font-size:1.15rem;font-weight:600;margin-bottom:2px}
+        .wo-info p{font-family:var(--mono);font-size:.85rem;color:var(--text3)}
+        .wo-finish{display:flex;align-items:center;gap:6px;padding:8px 16px;background:var(--ggreen);border:0;border-radius:999px;color:var(--void);font-family:var(--font);font-size:.85rem;font-weight:600;cursor:pointer;transition:all .3s;box-shadow:0 0 20px rgba(0,255,136,.3)}
+        .wo-finish svg{width:18px;height:18px;stroke:var(--void)}
+        .wo-finish:hover{transform:scale(1.05);box-shadow:0 0 40px rgba(0,255,136,.5)}
+
+        .live-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px}
+        .live-stat{display:flex;flex-direction:column;align-items:center;padding:14px;background:var(--glass);border:1px solid var(--border);border-radius:16px;backdrop-filter:blur(20px)}
+        .live-stat-lbl{font-size:.65rem;color:var(--text3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px}
+        .live-stat-val{font-family:var(--mono);font-size:1.5rem;font-weight:700;color:var(--cyan);line-height:1}
+        .live-stat-unit{font-size:.65rem;color:var(--text4);margin-top:2px}
+
+        .ex-list{display:flex;flex-direction:column;gap:14px;margin-bottom:14px}
+        .ex-card{background:var(--glass);border:1px solid var(--border);border-radius:16px;padding:16px;backdrop-filter:blur(20px);animation:fadeUp .4s ease}
+        .ex-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+        .ex-name{font-size:.95rem;font-weight:600}
+        .ex-del{width:30px;height:30px;display:flex;align-items:center;justify-content:center;background:var(--panel);border:1px solid var(--border);border-radius:8px;color:var(--text3);cursor:pointer;transition:all .2s}
+        .ex-del svg{width:15px;height:15px}
+        .ex-del:hover{background:rgba(255,68,102,.1);border-color:var(--red);color:var(--red)}
+
+        .sets-list{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
+        .set-row{display:grid;grid-template-columns:35px 1fr 1fr 30px;gap:8px;align-items:center;padding:8px;background:var(--panel);border-radius:10px}
+        .set-num{font-family:var(--mono);font-size:.8rem;font-weight:600;color:var(--text3);text-align:center}
+        .set-input{padding:8px;background:var(--graphite);border:1px solid var(--border);border-radius:8px;color:var(--text1);font-family:var(--mono);font-size:.85rem;text-align:center;transition:all .2s;width:100%}
+        .set-input:focus{outline:none;border-color:var(--cyan);box-shadow:0 0 0 2px rgba(0,212,255,.2)}
+        .set-input::placeholder{color:var(--text4)}
+        .set-del{width:28px;height:28px;display:flex;align-items:center;justify-content:center;background:0;border:1px solid var(--border);border-radius:8px;color:var(--text4);cursor:pointer;transition:all .2s}
+        .set-del svg{width:13px;height:13px}
+        .set-del:hover{background:rgba(255,68,102,.1);border-color:var(--red);color:var(--red)}
+        .no-sets{text-align:center;color:var(--text4);font-size:.8rem;padding:12px}
+
+        .add-set{display:flex;align-items:center;justify-content:center;gap:6px;padding:10px;background:var(--panel);border:1px dashed var(--border);border-radius:10px;color:var(--text3);font-family:var(--font);font-size:.8rem;cursor:pointer;transition:all .3s;width:100%}
+        .add-set svg{width:15px;height:15px}
+        .add-set:hover{border-color:var(--cyan);color:var(--cyan);background:var(--surface)}
+
+        .add-ex{display:flex;align-items:center;justify-content:center;gap:8px;padding:18px;background:var(--glass);border:2px dashed var(--border);border-radius:16px;color:var(--text2);font-family:var(--font);font-size:.95rem;font-weight:600;cursor:pointer;transition:all .3s;width:100%;backdrop-filter:blur(20px)}
+        .add-ex svg{width:22px;height:22px}
+        .add-ex:hover{border-color:var(--cyan);color:var(--cyan);transform:translateY(-2px);box-shadow:0 0 30px rgba(0,212,255,.3)}
+
+        /* Exercise Search Modal */
+        .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;display:flex;align-items:flex-end;justify-content:center;animation:modalIn .3s ease}
+        .modal-overlay.hidden{display:none}
+        @keyframes modalIn{from{opacity:0}to{opacity:1}}
+        .modal{width:100%;max-width:500px;max-height:80vh;background:var(--graphite);border-radius:20px 20px 0 0;padding:20px;animation:modalSlide .3s ease}
+        @keyframes modalSlide{from{transform:translateY(100%)}to{transform:translateY(0)}}
+        .modal-handle{width:40px;height:4px;background:var(--text4);border-radius:999px;margin:0 auto 16px}
+        .modal h3{font-size:1.1rem;font-weight:600;margin-bottom:12px}
+        .search-box{width:100%;padding:12px 16px;background:var(--panel);border:1px solid var(--border);border-radius:12px;color:var(--text1);font-family:var(--font);font-size:.9rem;margin-bottom:12px;transition:all .2s}
+        .search-box:focus{outline:none;border-color:var(--cyan);box-shadow:0 0 0 2px rgba(0,212,255,.2)}
+        .search-box::placeholder{color:var(--text4)}
+        .ex-results{max-height:50vh;overflow-y:auto;display:flex;flex-direction:column;gap:4px}
+        .ex-result{padding:12px 14px;background:var(--panel);border:1px solid var(--border);border-radius:10px;color:var(--text1);font-family:var(--font);font-size:.85rem;cursor:pointer;transition:all .2s;display:flex;justify-content:space-between;align-items:center}
+        .ex-result:hover,.ex-result:active{background:var(--surface);border-color:var(--cyan);color:var(--cyan)}
+        .ex-result-muscle{font-size:.7rem;color:var(--text3)}
+        .ex-cat{font-size:.7rem;color:var(--text3);text-transform:uppercase;letter-spacing:.1em;padding:8px 0 4px;font-weight:600}
+
+        /* Rest Timer */
+        .rest-overlay{position:fixed;inset:0;background:rgba(10,10,15,.92);z-index:150;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(10px)}
+        .rest-overlay.hidden{display:none}
+        .rest-content{text-align:center}
+        .rest-ring{width:200px;height:200px;margin:0 auto 20px}
+        .rest-ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+        .rest-ring-bg{fill:none;stroke:var(--panel);stroke-width:8}
+        .rest-ring-fill{fill:none;stroke:var(--cyan);stroke-width:8;stroke-linecap:round;stroke-dasharray:565;transition:stroke-dashoffset .3s linear;filter:drop-shadow(0 0 15px rgba(0,212,255,.5))}
+        .rest-time{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-family:var(--mono);font-size:3rem;font-weight:700;color:var(--cyan);text-shadow:0 0 30px var(--cyan)}
+        .rest-label{font-size:1rem;color:var(--text2);margin-bottom:20px}
+        .rest-controls{display:flex;gap:10px;justify-content:center}
+        .rest-btn{padding:10px 24px;border-radius:999px;font-family:var(--font);font-size:.85rem;font-weight:600;cursor:pointer;transition:all .3s}
+        .rest-skip{background:var(--panel);border:1px solid var(--border);color:var(--text2)}
+        .rest-skip:hover{border-color:var(--cyan);color:var(--cyan)}
+        .rest-add{background:var(--gcyan);border:0;color:var(--void)}
+        .rest-add:hover{box-shadow:0 0 30px rgba(0,212,255,.5)}
+
+        /* Workout Complete Modal */
+        .complete-overlay{position:fixed;inset:0;background:rgba(10,10,15,.95);z-index:200;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(10px)}
+        .complete-overlay.hidden{display:none}
+        .complete-content{text-align:center;padding:30px;max-width:350px;width:100%}
+        .complete-check{width:80px;height:80px;margin:0 auto 20px;color:var(--green);filter:drop-shadow(0 0 20px var(--green));animation:checkPop .5s cubic-bezier(.34,1.56,.64,1)}
+        .complete-check svg{width:100%;height:100%}
+        @keyframes checkPop{from{transform:scale(0);opacity:0}to{transform:scale(1);opacity:1}}
+        .complete-content h2{font-size:1.5rem;margin-bottom:4px}
+        .complete-content>p{color:var(--text3);margin-bottom:24px}
+        .complete-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:24px}
+        .complete-stat{padding:14px;background:var(--panel);border-radius:12px}
+        .complete-stat-val{font-family:var(--mono);font-size:1.3rem;font-weight:700;color:var(--cyan)}
+        .complete-stat-lbl{font-size:.65rem;color:var(--text3);display:block;margin-top:4px}
+        .complete-close{padding:12px 32px;background:var(--gcyan);border:0;border-radius:999px;color:var(--void);font-family:var(--font);font-size:1rem;font-weight:600;cursor:pointer;transition:all .3s;box-shadow:0 0 30px rgba(0,212,255,.3)}
+        .complete-close:hover{transform:scale(1.05);box-shadow:0 0 50px rgba(0,212,255,.5)}
+
+        /* History */
+        .history-list{display:flex;flex-direction:column;gap:10px}
+        .history-card{padding:14px;background:var(--glass);border:1px solid var(--border);border-radius:14px;backdrop-filter:blur(20px);transition:all .3s}
+        .history-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+        .history-split{font-size:.85rem;font-weight:600}
+        .history-date{font-size:.72rem;color:var(--text3)}
+        .history-stats{display:flex;gap:16px}
+        .history-stat{font-size:.75rem;color:var(--text3)}
+        .history-stat span{font-family:var(--mono);font-weight:600;color:var(--text2)}
+        .no-history{text-align:center;padding:40px;color:var(--text3)}
+
+        @media(max-width:400px){
+            .hero-stats{grid-template-columns:1fr}
+            .hero-card{flex-direction:row;justify-content:flex-start;gap:14px}
+            .cprog{width:60px;height:60px;margin-bottom:0}
+            .hero-card .text{text-align:left}
+            .mgrid{grid-template-columns:1fr}
+            .split-grid{grid-template-columns:repeat(2,1fr)}
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Loading Screen -->
+    <div class="loading-screen" id="loader">
+        <div>
+            <div class="loading-logo">
+                <svg viewBox="0 0 100 100" class="loading-ring">
+                    <circle cx="50" cy="50" r="45" class="loading-ring-bg"/>
+                    <circle cx="50" cy="50" r="45" class="loading-ring-fill"/>
+                </svg>
+                <span class="loading-text">IRON</span>
+            </div>
+            <p class="loading-status">Initializing System...</p>
+        </div>
+    </div>
+
+    <!-- App -->
+    <div class="app" id="app">
+
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <div class="logo-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+                        <polyline points="2 17 12 22 22 17"/>
+                        <polyline points="2 12 12 17 22 12"/>
+                    </svg>
+                </div>
+                <span class="logo-text">IRON<span class="logo-accent">PUMP</span></span>
+            </div>
+            <div class="live-badge">
+                <span class="live-dot"></span>
+                <span class="live-text">LIVE</span>
+            </div>
+        </header>
+
+        <!-- PAGE: INTEL -->
+        <div class="page active" id="page-intel">
+            <div class="section-header">
+                <h2>Intelligence</h2>
+                <p>Training analytics & performance</p>
+            </div>
+
+            <div class="hero-stats">
+                <div class="hero-card">
+                    <div class="cprog" data-val="78">
+                        <svg viewBox="0 0 100 100">
+                            <circle cx="50" cy="50" r="40" class="cprog-bg"/>
+                            <circle cx="50" cy="50" r="40" class="cprog-ring cyan"/>
+                        </svg>
+                        <div class="cprog-val">
+                            <span class="cprog-num">78</span>
+                            <span class="cprog-pct">%</span>
+                        </div>
+                    </div>
+                    <div>
+                        <h3>Performance</h3>
+                        <p>Training efficiency</p>
+                    </div>
+                </div>
+                <div class="hero-card">
+                    <div class="cprog" data-val="92">
+                        <svg viewBox="0 0 100 100">
+                            <circle cx="50" cy="50" r="40" class="cprog-bg"/>
+                            <circle cx="50" cy="50" r="40" class="cprog-ring green"/>
+                        </svg>
+                        <div class="cprog-val">
+                            <span class="cprog-num">92</span>
+                            <span class="cprog-pct">%</span>
+                        </div>
+                    </div>
+                    <div>
+                        <h3>Consistency</h3>
+                        <p>Adherence rate</p>
+                    </div>
+                </div>
+                <div class="hero-card">
+                    <div class="cprog" data-val="65">
+                        <svg viewBox="0 0 100 100">
+                            <circle cx="50" cy="50" r="40" class="cprog-bg"/>
+                            <circle cx="50" cy="50" r="40" class="cprog-ring amber"/>
+                        </svg>
+                        <div class="cprog-val">
+                            <span class="cprog-num">65</span>
+                            <span class="cprog-pct">%</span>
+                        </div>
+                    </div>
+                    <div>
+                        <h3>Recovery</h3>
+                        <p>Readiness score</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mgrid">
+                <div class="mcard mc">
+                    <div class="mcard-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/>
+                        </svg>
+                    </div>
+                    <div class="mcard-data">
+                        <span class="mcard-val" id="intel-vol">0</span>
+                        <span class="mcard-unit">kg</span>
+                    </div>
+                    <span class="mcard-label">Weekly Volume</span>
+                    <div class="mcard-trend pos">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+                            <polyline points="17 6 23 6 23 12"/>
+                        </svg>
+                        <span>Tracking</span>
+                    </div>
+                </div>
+                <div class="mcard mv">
+                    <div class="mcard-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                        </svg>
+                    </div>
+                    <div class="mcard-data">
+                        <span class="mcard-val" id="intel-sessions">0</span>
+                        <span class="mcard-unit">sessions</span>
+                    </div>
+                    <span class="mcard-label">This Month</span>
+                    <div class="mcard-trend pos">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+                            <polyline points="17 6 23 6 23 12"/>
+                        </svg>
+                        <span>Active</span>
+                    </div>
+                </div>
+                <div class="mcard ma">
+                    <div class="mcard-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                        </svg>
+                    </div>
+                    <div class="mcard-data">
+                        <span class="mcard-val" id="intel-prs">0</span>
+                        <span class="mcard-unit">PRs</span>
+                    </div>
+                    <span class="mcard-label">This Month</span>
+                    <div class="mcard-trend pos">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+                            <polyline points="17 6 23 6 23 12"/>
+                        </svg>
+                        <span>Growing</span>
+                    </div>
+                </div>
+                <div class="mcard mg">
+                    <div class="mcard-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                            <polyline points="22 4 12 14.01 9 11.01"/>
+                        </svg>
+                    </div>
+                    <div class="mcard-data">
+                        <span class="mcard-val" id="intel-streak">0</span>
+                        <span class="mcard-unit">day streak</span>
+                    </div>
+                    <span class="mcard-label">Current Streak</span>
+                    <div class="mcard-trend neu">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="5" y1="12" x2="19" y2="12"/>
+                        </svg>
+                        <span>Keep going!</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <div class="chart-head">
+                    <h3>Weekly Volume Trend</h3>
+                    <p>Total training load over time</p>
+                </div>
+                <div class="chart-box">
+                    <canvas id="volChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- PAGE: EXECUTE -->
+        <div class="page" id="page-execute">
+            <div class="section-header">
+                <h2>Execute</h2>
+                <p>Track your training session</p>
+            </div>
+
+            <div id="woInactive">
+                <div class="start-card">
+                    <div class="start-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polygon points="5 3 19 12 5 21 5 3"/>
+                        </svg>
+                    </div>
+                    <h3>Ready to Train?</h3>
+                    <p>Select your workout split</p>
+                    <div class="split-grid" id="splitGrid"></div>
+                </div>
+            </div>
+
+            <div id="woActive" class="hidden">
+                <div class="wo-header">
+                    <div class="wo-info">
+                        <h3 id="woSplit">Upper Body</h3>
+                        <p id="woTimer">00:00</p>
+                    </div>
+                    <button class="wo-finish" id="woFinish">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="9 11 12 14 22 4"/>
+                            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+                        </svg>
+                        Finish
+                    </button>
+                </div>
+
+                <div class="live-grid">
+                    <div class="live-stat">
+                        <span class="live-stat-lbl">Volume</span>
+                        <span class="live-stat-val" id="liveVol">0</span>
+                        <span class="live-stat-unit">kg</span>
+                    </div>
+                    <div class="live-stat">
+                        <span class="live-stat-lbl">Sets</span>
+                        <span class="live-stat-val" id="liveSets">0</span>
+                        <span class="live-stat-unit">total</span>
+                    </div>
+                    <div class="live-stat">
+                        <span class="live-stat-lbl">Exercises</span>
+                        <span class="live-stat-val" id="liveEx">0</span>
+                        <span class="live-stat-unit">done</span>
+                    </div>
+                </div>
+
+                <div class="ex-list" id="exList"></div>
+
+                <button class="add-ex" id="addExBtn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="12" y1="5" x2="12" y2="19"/>
+                        <line x1="5" y1="12" x2="19" y2="12"/>
+                    </svg>
+                    Add Exercise
+                </button>
+            </div>
+        </div>
+
+        <!-- PAGE: HISTORY -->
+        <div class="page" id="page-history">
+            <div class="section-header">
+                <h2>History</h2>
+                <p>Your past workouts</p>
+            </div>
+            <div id="historyList" class="history-list"></div>
+        </div>
+
+        <!-- Bottom Nav -->
+        <nav class="bottom-nav">
+            <button class="bnav" data-page="intel">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                </svg>
+                <span>Intel</span>
+            </button>
+            <button class="bnav active" data-page="execute">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polygon points="5 3 19 12 5 21 5 3"/>
+                </svg>
+                <span>Execute</span>
+            </button>
+            <button class="bnav" data-page="history">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                </svg>
+                <span>History</span>
+            </button>
+        </nav>
+    </div>
+
+    <!-- Exercise Search Modal -->
+    <div class="modal-overlay hidden" id="exModal">
+        <div class="modal">
+            <div class="modal-handle"></div>
+            <h3>Add Exercise</h3>
+            <input type="text" class="search-box" id="exSearch" placeholder="Search exercises...">
+            <div class="ex-results" id="exResults"></div>
+        </div>
+    </div>
+
+    <!-- Rest Timer -->
+    <div class="rest-overlay hidden" id="restOverlay">
+        <div class="rest-content">
+            <p class="rest-label">Rest Timer</p>
+            <div class="rest-ring" style="position:relative">
+                <svg viewBox="0 0 200 200">
+                    <circle cx="100" cy="100" r="90" class="rest-ring-bg"/>
+                    <circle cx="100" cy="100" r="90" class="rest-ring-fill" id="restRingFill"/>
+                </svg>
+                <span class="rest-time" id="restTime">2:00</span>
+            </div>
+            <div class="rest-controls">
+                <button class="rest-btn rest-skip" id="restSkip">Skip</button>
+                <button class="rest-btn rest-add" id="restAdd30">+30s</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Workout Complete -->
+    <div class="complete-overlay hidden" id="completeOverlay">
+        <div class="complete-content">
+            <div class="complete-check">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                    <polyline points="22 4 12 14.01 9 11.01"/>
+                </svg>
+            </div>
+            <h2>Workout Complete!</h2>
+            <p>Great session. Keep pushing.</p>
+            <div class="complete-stats">
+                <div class="complete-stat">
+                    <span class="complete-stat-val" id="compVol">0</span>
+                    <span class="complete-stat-lbl">Volume (kg)</span>
+                </div>
+                <div class="complete-stat">
+                    <span class="complete-stat-val" id="compSets">0</span>
+                    <span class="complete-stat-lbl">Sets</span>
+                </div>
+                <div class="complete-stat">
+                    <span class="complete-stat-val" id="compTime">0</span>
+                    <span class="complete-stat-lbl">Minutes</span>
+                </div>
+            </div>
+            <button class="complete-close" id="compClose">Done</button>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
