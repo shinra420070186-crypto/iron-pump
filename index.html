@@ -4,6 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>IRON PUMP</title>
+    <meta name="description" content="Elite Training System">
+    <meta name="theme-color" content="#00d4ff">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="IRON PUMP">
+    <link rel="manifest" href="./manifest.json">
+    <link rel="apple-touch-icon" href="./icon-512.png">
+    <link rel="icon" href="./icon-512.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -11,15 +19,12 @@
         :root{--void:#0a0a0f;--graphite:#12121a;--panel:#1f1f2e;--surface:#252532;--hover:#2a2a3a;--text1:#fff;--text2:rgba(255,255,255,.7);--text3:rgba(255,255,255,.5);--text4:rgba(255,255,255,.3);--cyan:#00d4ff;--blue:#0066ff;--violet:#6b5eff;--green:#00ff88;--amber:#ffaa00;--red:#ff4466;--gcyan:linear-gradient(135deg,#00d4ff,#0066ff);--gviolet:linear-gradient(135deg,#6b5eff,#4433dd);--gamber:linear-gradient(135deg,#ffaa00,#ff6600);--ggreen:linear-gradient(135deg,#00ff88,#00cc66);--glass:rgba(26,26,36,.8);--border:rgba(255,255,255,.08);--font:'Space Grotesk',-apple-system,sans-serif;--mono:'JetBrains Mono','SF Mono',monospace}
         *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
         html{font-size:16px;-webkit-font-smoothing:antialiased}
-        body{font-family:var(--font);background:var(--void);color:var(--text1);line-height:1.5;min-height:100vh;overflow-x:hidden}
+        body{font-family:var(--font);background:var(--void);color:var(--text1);line-height:1.5;min-height:100vh;min-height:100dvh;overflow-x:hidden}
         ::-webkit-scrollbar{width:0;height:0}
 
-        /* Ripple Effect */
-        .ripple-container{position:relative;overflow:hidden}
         .ripple{position:absolute;border-radius:50%;background:rgba(0,212,255,.3);transform:scale(0);animation:rippleAnim .6s ease-out forwards;pointer-events:none}
         @keyframes rippleAnim{to{transform:scale(4);opacity:0}}
 
-        /* Loading */
         .loading-screen{position:fixed;inset:0;background:var(--void);display:flex;align-items:center;justify-content:center;z-index:9999;transition:opacity .6s,visibility .6s}
         .loading-screen.hidden{opacity:0;visibility:hidden;pointer-events:none}
         .loading-logo{position:relative;width:120px;height:120px;margin:0 auto 24px}
@@ -32,11 +37,9 @@
         .loading-status{text-align:center;font-size:.85rem;color:var(--text3);animation:pulse 1.5s ease-in-out infinite}
         @keyframes pulse{0%,100%{opacity:.5}50%{opacity:1}}
 
-        /* App */
-        .app{min-height:100vh;padding-bottom:90px;opacity:0;transform:translateY(10px);transition:opacity .6s,transform .6s}
+        .app{min-height:100vh;min-height:100dvh;padding-bottom:90px;opacity:0;transform:translateY(10px);transition:opacity .6s,transform .6s}
         .app.loaded{opacity:1;transform:translateY(0)}
 
-        /* Header */
         .header{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:14px 20px;background:linear-gradient(180deg,var(--void) 60%,transparent);backdrop-filter:blur(20px)}
         .logo{display:flex;align-items:center;gap:8px}
         .logo-icon{width:28px;height:28px;color:var(--cyan);filter:drop-shadow(0 0 10px var(--cyan))}
@@ -47,36 +50,29 @@
         @keyframes ldot{0%,100%{box-shadow:0 0 0 0 rgba(0,255,136,.5)}50%{box-shadow:0 0 0 6px rgba(0,255,136,0)}}
         .live-text{font-size:.7rem;font-weight:600;color:var(--green);letter-spacing:.1em}
 
-        /* Bottom Nav */
-        .bottom-nav{position:fixed;bottom:0;left:0;right:0;display:flex;justify-content:space-around;padding:6px 10px;padding-bottom:calc(6px + env(safe-area-inset-bottom,0));background:rgba(10,10,15,.95);backdrop-filter:blur(20px);border-top:1px solid var(--border);z-index:100}
-        .bnav{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 8px;background:0;border:0;color:var(--text4);font-family:var(--font);font-size:.6rem;cursor:pointer;transition:all .3s;position:relative}
-        .bnav svg{width:22px;height:22px;transition:all .3s}
+        .bottom-nav{position:fixed;bottom:0;left:0;right:0;display:flex;justify-content:space-around;padding:4px 6px;padding-bottom:calc(4px + env(safe-area-inset-bottom,0));background:rgba(10,10,15,.95);backdrop-filter:blur(20px);border-top:1px solid var(--border);z-index:100}
+        .bnav{display:flex;flex-direction:column;align-items:center;gap:2px;padding:5px 6px;background:0;border:0;color:var(--text4);font-family:var(--font);font-size:.55rem;cursor:pointer;transition:all .3s;position:relative}
+        .bnav svg{width:20px;height:20px;transition:all .3s}
         .bnav.active{color:var(--cyan)}
         .bnav.active svg{filter:drop-shadow(0 0 10px var(--cyan))}
         .bnav.active::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:20px;height:2px;background:var(--cyan);border-radius:999px;box-shadow:0 0 10px var(--cyan)}
 
-        /* Pages */
         .page{display:none;padding:0 20px;animation:fadeUp .5s cubic-bezier(.34,1.56,.64,1)}
         .page.active{display:block}
         @keyframes fadeUp{from{opacity:0;transform:translateY(20px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
-
-        /* Pop Animation */
         @keyframes popIn{from{opacity:0;transform:scale(.85) translateY(15px)}to{opacity:1;transform:scale(1) translateY(0)}}
-        @keyframes glossyPop{0%{transform:scale(1)}50%{transform:scale(.95)}100%{transform:scale(1)}}
 
         .section-header{margin-bottom:20px}
         .section-header h2{font-size:1.4rem;font-weight:600;margin-bottom:4px}
         .section-header p{color:var(--text3);font-size:.85rem}
 
-        /* Back Button */
         .back-btn{display:flex;align-items:center;gap:6px;padding:8px 14px;background:var(--panel);border:1px solid var(--border);border-radius:999px;color:var(--text2);font-family:var(--font);font-size:.8rem;font-weight:500;cursor:pointer;transition:all .3s;margin-bottom:16px}
         .back-btn svg{width:16px;height:16px}
         .back-btn:hover{background:var(--surface);border-color:var(--cyan);color:var(--cyan)}
         .back-btn:active{transform:scale(.95)}
 
-        /* Intel Page */
         .hero-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:24px}
-        .hero-card{display:flex;flex-direction:column;align-items:center;text-align:center;padding:12px;background:var(--glass);border:1px solid var(--border);border-radius:16px;backdrop-filter:blur(20px);transition:all .3s;cursor:pointer}
+        .hero-card{display:flex;flex-direction:column;align-items:center;text-align:center;padding:12px;background:var(--glass);border:1px solid var(--border);border-radius:16px;backdrop-filter:blur(20px);transition:all .3s;cursor:pointer;overflow:hidden;position:relative}
         .hero-card:active{transform:scale(.95);border-color:var(--cyan)}
         .cprog{position:relative;width:75px;height:75px;margin-bottom:6px}
         .cprog svg{width:100%;height:100%;transform:rotate(-90deg)}
@@ -93,7 +89,7 @@
 
         .mgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:24px}
         .mcard{position:relative;padding:16px;background:var(--glass);border:1px solid var(--border);border-radius:16px;backdrop-filter:blur(20px);overflow:hidden;transition:all .3s;cursor:pointer}
-        .mcard:active{transform:scale(.96);animation:glossyPop .3s ease}
+        .mcard:active{transform:scale(.96)}
         .mcard::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
         .mcard::after{content:'';position:absolute;top:0;left:-100%;width:60%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.05),transparent);transition:left .6s}
         .mcard:active::after{left:150%}
@@ -125,6 +121,60 @@
 
         .hidden{display:none!important}
 
+        /* Muscle Volume Bars */
+        .muscle-grid{display:flex;flex-direction:column;gap:10px;margin-bottom:24px}
+        .muscle-row{display:flex;flex-direction:column;gap:4px}
+        .muscle-info{display:flex;justify-content:space-between;align-items:center}
+        .muscle-name{font-size:.82rem;font-weight:500}
+        .muscle-sets{font-family:var(--mono);font-size:.75rem;color:var(--cyan)}
+        .muscle-bar{height:8px;background:var(--panel);border-radius:999px;overflow:hidden}
+        .muscle-bar-fill{height:100%;border-radius:999px;transition:width 1s cubic-bezier(.4,0,.2,1);box-shadow:0 0 10px rgba(0,212,255,.3)}
+        .muscle-bar-fill.c1{background:var(--gcyan)}
+        .muscle-bar-fill.c2{background:var(--gviolet)}
+        .muscle-bar-fill.c3{background:var(--ggreen)}
+        .muscle-bar-fill.c4{background:var(--gamber)}
+
+        /* PR Notification */
+        .pr-toast{position:fixed;top:80px;left:50%;transform:translateX(-50%) translateY(-100px);background:var(--gamber);color:var(--void);padding:12px 24px;border-radius:999px;font-weight:700;font-size:.88rem;z-index:300;transition:transform .5s cubic-bezier(.34,1.56,.64,1);box-shadow:0 0 40px rgba(255,170,0,.5);pointer-events:none}
+        .pr-toast.show{transform:translateX(-50%) translateY(0)}
+        .pr-toast.hide{transform:translateX(-50%) translateY(-100px)}
+
+        /* Body Weight */
+        .bw-input-card{background:var(--glass);border:1px solid var(--border);border-radius:16px;padding:18px;margin-bottom:20px;backdrop-filter:blur(20px);display:flex;align-items:center;gap:12px}
+        .bw-input{flex:1;padding:12px;background:var(--graphite);border:1.5px solid var(--border);border-radius:12px;color:var(--text1);font-family:var(--mono);font-size:1rem;text-align:center}
+        .bw-input:focus{outline:none;border-color:var(--cyan);box-shadow:0 0 0 3px rgba(0,212,255,.12)}
+        .bw-input::placeholder{color:var(--text4)}
+        .bw-save{padding:12px 20px;background:var(--gcyan);border:0;border-radius:12px;color:var(--void);font-family:var(--font);font-size:.85rem;font-weight:700;cursor:pointer;transition:all .3s}
+        .bw-save:active{transform:scale(.95)}
+        .bw-current{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;background:var(--glass);border:1px solid var(--border);border-radius:16px;margin-bottom:16px;backdrop-filter:blur(20px)}
+        .bw-label{font-size:.8rem;color:var(--text3)}
+        .bw-value{font-family:var(--mono);font-size:1.3rem;font-weight:700;color:var(--cyan)}
+        .bw-change{font-size:.75rem;margin-left:8px}
+        .bw-change.up{color:var(--red)}
+        .bw-change.down{color:var(--green)}
+        .bw-change.same{color:var(--text4)}
+
+        /* Settings / Theme */
+        .settings-card{background:var(--glass);border:1px solid var(--border);border-radius:16px;padding:18px;margin-bottom:14px;backdrop-filter:blur(20px)}
+        .settings-card h3{font-size:.95rem;font-weight:600;margin-bottom:14px}
+        .theme-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+        .theme-btn{width:100%;aspect-ratio:1;border-radius:14px;border:2px solid var(--border);cursor:pointer;transition:all .3s;position:relative;overflow:hidden}
+        .theme-btn:active{transform:scale(.9)}
+        .theme-btn.active{border-color:var(--text1);box-shadow:0 0 20px rgba(255,255,255,.2)}
+        .theme-btn::after{content:attr(data-name);position:absolute;bottom:4px;left:0;right:0;text-align:center;font-size:.55rem;color:var(--text2);font-weight:600}
+        .t-cyan{background:linear-gradient(135deg,#00d4ff,#0066ff)}
+        .t-violet{background:linear-gradient(135deg,#6b5eff,#9b59b6)}
+        .t-red{background:linear-gradient(135deg,#ff4466,#ff0055)}
+        .t-gold{background:linear-gradient(135deg,#ffaa00,#ff6600)}
+
+        .backup-btns{display:flex;gap:10px}
+        .backup-btn{flex:1;padding:12px;border-radius:12px;font-family:var(--font);font-size:.82rem;font-weight:600;cursor:pointer;transition:all .3s;display:flex;align-items:center;justify-content:center;gap:6px}
+        .backup-btn:active{transform:scale(.95)}
+        .backup-btn svg{width:16px;height:16px}
+        .btn-export{background:var(--gcyan);border:0;color:var(--void)}
+        .btn-import{background:var(--panel);border:1.5px solid var(--border);color:var(--text2)}
+        .btn-import:hover{border-color:var(--cyan);color:var(--cyan)}
+
         /* Day Cards */
         .day-grid{display:flex;flex-direction:column;gap:12px}
         .day-card{display:flex;align-items:center;padding:20px;background:var(--glass);border:1px solid var(--border);border-radius:18px;color:var(--text1);font-family:var(--font);cursor:pointer;transition:all .3s;backdrop-filter:blur(20px);width:100%;text-align:left;position:relative;overflow:hidden}
@@ -139,7 +189,6 @@
         .day-arrow{width:20px;height:20px;color:var(--text4);transition:all .3s}
         .day-card:hover .day-arrow{color:var(--cyan);transform:translateX(4px)}
 
-        /* Workout Header */
         .wo-header{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;background:var(--glass);border:1px solid var(--border);border-radius:16px;margin-bottom:14px;backdrop-filter:blur(20px)}
         .wo-info h3{font-size:.95rem;font-weight:600;margin-bottom:2px}
         .wo-info p{font-family:var(--mono);font-size:.8rem;color:var(--text3)}
@@ -149,16 +198,14 @@
         .wo-finish svg{width:16px;height:16px;stroke:var(--void)}
         .wo-finish:active{transform:scale(.93)}
 
-        /* Live Stats */
         .live-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
-        .live-stat{display:flex;flex-direction:column;align-items:center;padding:12px 8px;background:var(--glass);border:1px solid var(--border);border-radius:14px;backdrop-filter:blur(20px);transition:all .3s}
+        .live-stat{display:flex;flex-direction:column;align-items:center;padding:12px 8px;background:var(--glass);border:1px solid var(--border);border-radius:14px;backdrop-filter:blur(20px)}
         .live-stat-lbl{font-size:.6rem;color:var(--text3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:2px}
         .live-stat-val{font-family:var(--mono);font-size:1.4rem;font-weight:700;color:var(--cyan);line-height:1;transition:all .3s}
         .live-stat-unit{font-size:.6rem;color:var(--text4);margin-top:2px}
         .live-stat-val.bump{animation:valBump .3s ease}
         @keyframes valBump{0%{transform:scale(1)}50%{transform:scale(1.2);color:var(--green)}100%{transform:scale(1)}}
 
-        /* Current Exercise Card */
         .ex-active-card{background:var(--glass);border:1px solid var(--border);border-radius:20px;padding:0;backdrop-filter:blur(20px);overflow:hidden;animation:popIn .5s cubic-bezier(.34,1.56,.64,1)}
         .ex-top-bar{height:4px;background:var(--gcyan);position:relative;overflow:hidden}
         .ex-top-bar::after{content:'';position:absolute;top:0;left:-50%;width:50%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.6),transparent);animation:shimmer 2s infinite}
@@ -168,7 +215,6 @@
         .ex-progress-fill{height:100%;background:var(--gcyan);border-radius:999px;transition:width .6s cubic-bezier(.4,0,.2,1);box-shadow:0 0 12px rgba(0,212,255,.5);position:relative}
         .ex-progress-fill::after{content:'';position:absolute;right:0;top:-1px;width:8px;height:8px;background:var(--cyan);border-radius:50%;box-shadow:0 0 10px var(--cyan)}
         .ex-counter{font-family:var(--mono);font-size:.7rem;color:var(--text4);text-align:center;margin-bottom:4px;letter-spacing:.15em}
-
         .ex-body{padding:12px 20px 20px}
         .ex-title-section{text-align:center;margin-bottom:20px;padding:10px 0}
         .ex-title{font-size:1.4rem;font-weight:700;margin-bottom:4px;background:var(--gcyan);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
@@ -191,21 +237,17 @@
         .action-btn{display:flex;align-items:center;justify-content:center;gap:8px;padding:14px;border-radius:14px;font-family:var(--font);font-size:.88rem;font-weight:600;cursor:pointer;transition:all .3s;width:100%;position:relative;overflow:hidden}
         .action-btn:active{transform:scale(.96)}
         .action-btn svg{width:18px;height:18px}
-
         .btn-add{background:var(--panel);border:1.5px dashed var(--border);color:var(--text2)}
-        .btn-add:hover{border-color:var(--cyan);color:var(--cyan);background:rgba(0,212,255,.05)}
-
+        .btn-add:hover{border-color:var(--cyan);color:var(--cyan)}
         .btn-skip-ex{background:transparent;border:1.5px solid var(--border);color:var(--text3)}
         .btn-skip-ex:hover{border-color:var(--amber);color:var(--amber)}
         .btn-skip-set{background:transparent;border:1.5px solid var(--border);color:var(--text3)}
         .btn-skip-set:hover{border-color:var(--violet);color:var(--violet)}
-
         .btn-finish-ex{background:var(--gcyan);border:0;color:var(--void);box-shadow:0 0 30px rgba(0,212,255,.3)}
         .btn-finish-ex svg{stroke:var(--void)}
-        .btn-finish-ex:hover{box-shadow:0 0 50px rgba(0,212,255,.5);transform:translateY(-2px)}
+        .btn-finish-ex:hover{box-shadow:0 0 50px rgba(0,212,255,.5)}
         .btn-finish-ex:active{transform:scale(.96)}
 
-        /* Rest Timer */
         .rest-overlay{position:fixed;inset:0;background:rgba(10,10,15,.94);z-index:150;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(12px);animation:fadeUp .3s ease}
         .rest-overlay.hidden{display:none}
         .rest-content{text-align:center}
@@ -219,18 +261,16 @@
         .rest-btn{padding:12px 28px;border-radius:999px;font-family:var(--font);font-size:.88rem;font-weight:600;cursor:pointer;transition:all .3s}
         .rest-btn:active{transform:scale(.94)}
         .rest-skip{background:var(--panel);border:1px solid var(--border);color:var(--text2)}
-        .rest-skip:hover{border-color:var(--cyan);color:var(--cyan)}
         .rest-add{background:var(--gcyan);border:0;color:var(--void)}
 
-        /* Complete */
         .complete-overlay{position:fixed;inset:0;background:rgba(10,10,15,.96);z-index:200;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(12px)}
         .complete-overlay.hidden{display:none}
         .complete-content{text-align:center;padding:30px;max-width:360px;width:100%;animation:popIn .5s cubic-bezier(.34,1.56,.64,1)}
         .complete-check{width:90px;height:90px;margin:0 auto 24px;color:var(--green);filter:drop-shadow(0 0 25px var(--green));animation:checkPop .6s cubic-bezier(.34,1.56,.64,1)}
         .complete-check svg{width:100%;height:100%}
         @keyframes checkPop{from{transform:scale(0) rotate(-20deg);opacity:0}to{transform:scale(1) rotate(0);opacity:1}}
-        .complete-content h2{font-size:1.6rem;margin-bottom:6px;font-weight:700}
-        .complete-content>p{color:var(--text3);margin-bottom:28px;font-size:.9rem}
+        .complete-content h2{font-size:1.6rem;margin-bottom:6px}
+        .complete-content>p{color:var(--text3);margin-bottom:28px}
         .complete-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:28px}
         .complete-stat{padding:16px 10px;background:var(--panel);border-radius:14px;border:1px solid var(--border)}
         .complete-stat-val{font-family:var(--mono);font-size:1.4rem;font-weight:700;color:var(--cyan);display:block}
@@ -238,7 +278,6 @@
         .complete-close{padding:14px 40px;background:var(--gcyan);border:0;border-radius:999px;color:var(--void);font-family:var(--font);font-size:1rem;font-weight:700;cursor:pointer;transition:all .3s;box-shadow:0 0 30px rgba(0,212,255,.3)}
         .complete-close:active{transform:scale(.95)}
 
-        /* History */
         .history-list{display:flex;flex-direction:column;gap:10px}
         .history-card{padding:16px;background:var(--glass);border:1px solid var(--border);border-radius:16px;backdrop-filter:blur(20px);transition:all .3s;animation:popIn .4s ease}
         .history-card:active{transform:scale(.98)}
@@ -249,38 +288,21 @@
         .history-stat{font-size:.75rem;color:var(--text3)}
         .history-stat span{font-family:var(--mono);font-weight:600;color:var(--text2)}
         .no-history{text-align:center;padding:50px 20px;color:var(--text3)}
-        .no-history p:first-child{font-size:1.1rem;font-weight:500;margin-bottom:6px}
 
         @media(max-width:400px){
             .hero-stats{grid-template-columns:1fr}
             .hero-card{flex-direction:row;gap:14px}
             .cprog{width:60px;height:60px;margin-bottom:0}
             .mgrid{grid-template-columns:1fr}
+            .theme-grid{grid-template-columns:repeat(4,1fr)}
         }
     </style>
 </head>
 <body>
-    <div class="loading-screen" id="loader">
-        <div>
-            <div class="loading-logo">
-                <svg viewBox="0 0 100 100" class="loading-ring">
-                    <circle cx="50" cy="50" r="45" class="loading-ring-bg"/>
-                    <circle cx="50" cy="50" r="45" class="loading-ring-fill"/>
-                </svg>
-                <span class="loading-text">IRON</span>
-            </div>
-            <p class="loading-status">Initializing System...</p>
-        </div>
-    </div>
+    <div class="loading-screen" id="loader"><div><div class="loading-logo"><svg viewBox="0 0 100 100" class="loading-ring"><circle cx="50" cy="50" r="45" class="loading-ring-bg"/><circle cx="50" cy="50" r="45" class="loading-ring-fill"/></svg><span class="loading-text">IRON</span></div><p class="loading-status">Initializing System...</p></div></div>
 
     <div class="app" id="app">
-        <header class="header">
-            <div class="logo">
-                <div class="logo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg></div>
-                <span class="logo-text">IRON<span class="logo-accent">PUMP</span></span>
-            </div>
-            <div class="live-badge"><span class="live-dot"></span><span class="live-text">LIVE</span></div>
-        </header>
+        <header class="header"><div class="logo"><div class="logo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg></div><span class="logo-text">IRON<span class="logo-accent">PUMP</span></span></div><div class="live-badge"><span class="live-dot"></span><span class="live-text">LIVE</span></div></header>
 
         <!-- INTEL -->
         <div class="page" id="page-intel">
@@ -297,6 +319,7 @@
                 <div class="mcard mg"><div class="mcard-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div><div class="mcard-data"><span class="mcard-val" id="intel-streak">0</span><span class="mcard-unit">day streak</span></div><span class="mcard-label">Current Streak</span><div class="mcard-trend neu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/></svg><span>Keep going!</span></div></div>
             </div>
             <div class="chart-card"><div class="chart-head"><h3>Volume Trend</h3><p>Weekly total training load (kg)</p></div><div class="chart-box"><canvas id="volChart"></canvas></div></div>
+            <div class="chart-card"><div class="chart-head"><h3>Muscle Group Volume</h3><p>Weekly sets per muscle group</p></div><div class="muscle-grid" id="muscleGrid"></div></div>
         </div>
 
         <!-- EXECUTE -->
@@ -305,10 +328,7 @@
             <div id="woInactive"><div class="day-grid" id="dayGrid"></div></div>
             <div id="woActive" class="hidden">
                 <button class="back-btn" id="backBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>Back to Days</button>
-                <div class="wo-header">
-                    <div class="wo-info"><h3 id="woSplit">Day 1</h3><p id="woTimer">00:00</p></div>
-                    <div class="wo-right"><span class="wo-progress" id="woProgress">0/0</span><button class="wo-finish" id="woFinish"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>End</button></div>
-                </div>
+                <div class="wo-header"><div class="wo-info"><h3 id="woSplit">Day 1</h3><p id="woTimer">00:00</p></div><div class="wo-right"><span class="wo-progress" id="woProgress">0/0</span><button class="wo-finish" id="woFinish"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>End</button></div></div>
                 <div class="live-grid">
                     <div class="live-stat"><span class="live-stat-lbl">Volume</span><span class="live-stat-val" id="liveVol">0</span><span class="live-stat-unit">kg</span></div>
                     <div class="live-stat"><span class="live-stat-lbl">Sets</span><span class="live-stat-val" id="liveSets">0</span><span class="live-stat-unit">total</span></div>
@@ -318,41 +338,55 @@
             </div>
         </div>
 
+        <!-- BODY WEIGHT -->
+        <div class="page" id="page-weight">
+            <div class="section-header"><h2>Body Weight</h2><p>Track your weight progress</p></div>
+            <div class="bw-input-card">
+                <input type="number" class="bw-input" id="bwInput" placeholder="Enter weight (kg)" inputmode="decimal">
+                <button class="bw-save" id="bwSave">Log</button>
+            </div>
+            <div id="bwCurrent"></div>
+            <div class="chart-card"><div class="chart-head"><h3>Weight Trend</h3><p>Your body weight over time</p></div><div class="chart-box"><canvas id="bwChart"></canvas></div></div>
+            <div id="bwHistory"></div>
+        </div>
+
         <!-- HISTORY -->
         <div class="page" id="page-history">
             <div class="section-header"><h2>History</h2><p>Your past workouts</p></div>
             <div id="historyList" class="history-list"></div>
         </div>
 
+        <!-- SETTINGS -->
+        <div class="page" id="page-settings">
+            <div class="section-header"><h2>Settings</h2><p>Customize your experience</p></div>
+            <div class="settings-card"><h3>Theme</h3><div class="theme-grid"><button class="theme-btn t-cyan active" data-theme="cyan" data-name="Cyan"></button><button class="theme-btn t-violet" data-theme="violet" data-name="Violet"></button><button class="theme-btn t-red" data-theme="red" data-name="Red"></button><button class="theme-btn t-gold" data-theme="gold" data-name="Gold"></button></div></div>
+            <div class="settings-card"><h3>Backup Data</h3><p style="font-size:.78rem;color:var(--text3);margin-bottom:14px">Export your data to save it, or import a backup</p><div class="backup-btns"><button class="backup-btn btn-export" id="exportBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Export</button><button class="backup-btn btn-import" id="importBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Import</button></div><input type="file" id="importFile" accept=".json" style="display:none"></div>
+            <div class="settings-card"><h3>Rest Timer Duration</h3><div style="display:flex;gap:8px;flex-wrap:wrap" id="restOptions"></div></div>
+        </div>
+
         <nav class="bottom-nav">
             <button class="bnav" data-page="intel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg><span>Intel</span></button>
             <button class="bnav active" data-page="execute"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg><span>Execute</span></button>
+            <button class="bnav" data-page="weight"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v18M3 12h18"/><circle cx="12" cy="12" r="3"/></svg><span>Weight</span></button>
             <button class="bnav" data-page="history"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span>History</span></button>
+            <button class="bnav" data-page="settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg><span>Settings</span></button>
         </nav>
     </div>
 
-    <div class="rest-overlay hidden" id="restOverlay">
-        <div class="rest-content">
-            <p class="rest-label">Rest Timer</p>
-            <div class="rest-ring"><svg viewBox="0 0 200 200"><circle cx="100" cy="100" r="90" class="rest-ring-bg"/><circle cx="100" cy="100" r="90" class="rest-ring-fill" id="restRingFill"/></svg><span class="rest-time" id="restTime">2:00</span></div>
-            <div class="rest-controls"><button class="rest-btn rest-skip" id="restSkip">Skip</button><button class="rest-btn rest-add" id="restAdd30">+30s</button></div>
-        </div>
-    </div>
+    <!-- PR Toast -->
+    <div class="pr-toast" id="prToast">🏆 NEW PR!</div>
 
-    <div class="complete-overlay hidden" id="completeOverlay">
-        <div class="complete-content">
-            <div class="complete-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
-            <h2>Workout Complete!</h2>
-            <p>Great session. Keep pushing.</p>
-            <div class="complete-stats">
-                <div class="complete-stat"><span class="complete-stat-val" id="compVol">0</span><span class="complete-stat-lbl">Volume (kg)</span></div>
-                <div class="complete-stat"><span class="complete-stat-val" id="compSets">0</span><span class="complete-stat-lbl">Sets</span></div>
-                <div class="complete-stat"><span class="complete-stat-val" id="compTime">0</span><span class="complete-stat-lbl">Minutes</span></div>
-            </div>
-            <button class="complete-close" id="compClose">Done</button>
-        </div>
-    </div>
+    <!-- Rest Timer -->
+    <div class="rest-overlay hidden" id="restOverlay"><div class="rest-content"><p class="rest-label">Rest Timer</p><div class="rest-ring"><svg viewBox="0 0 200 200"><circle cx="100" cy="100" r="90" class="rest-ring-bg"/><circle cx="100" cy="100" r="90" class="rest-ring-fill" id="restRingFill"/></svg><span class="rest-time" id="restTime">2:00</span></div><div class="rest-controls"><button class="rest-btn rest-skip" id="restSkip">Skip</button><button class="rest-btn rest-add" id="restAdd30">+30s</button></div></div></div>
+
+    <!-- Workout Complete -->
+    <div class="complete-overlay hidden" id="completeOverlay"><div class="complete-content"><div class="complete-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div><h2>Workout Complete!</h2><p>Great session. Keep pushing.</p><div class="complete-stats"><div class="complete-stat"><span class="complete-stat-val" id="compVol">0</span><span class="complete-stat-lbl">Volume (kg)</span></div><div class="complete-stat"><span class="complete-stat-val" id="compSets">0</span><span class="complete-stat-lbl">Sets</span></div><div class="complete-stat"><span class="complete-stat-val" id="compTime">0</span><span class="complete-stat-lbl">Minutes</span></div></div><button class="complete-close" id="compClose">Done</button></div></div>
 
     <script src="app.js"></script>
+    <script>
+        if('serviceWorker' in navigator){
+            navigator.serviceWorker.register('./sw.js').catch(()=>{});
+        }
+    </script>
 </body>
 </html>
