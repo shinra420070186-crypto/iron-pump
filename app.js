@@ -1,55 +1,87 @@
 // ═══════════════════════════════════════════════════════════
 // IRON PUMP — Elite Training System
-// Complete Application
 // ═══════════════════════════════════════════════════════════
 
-// Exercise Database
-const EXERCISES = {
-    chest: [
-        'Bench Press', 'Incline Bench Press', 'Decline Bench Press',
-        'Dumbbell Bench Press', 'Incline Dumbbell Press',
-        'Cable Flyes', 'Pec Deck', 'Push Ups',
-        'Chest Dips', 'Machine Chest Press'
-    ],
-    back: [
-        'Deadlift', 'Barbell Row', 'Pull Ups', 'Chin Ups',
-        'Lat Pulldown', 'Seated Cable Row', 'T-Bar Row',
-        'Dumbbell Row', 'Face Pulls', 'Straight Arm Pulldown'
-    ],
-    shoulders: [
-        'Overhead Press', 'Dumbbell Shoulder Press', 'Lateral Raise',
-        'Front Raise', 'Reverse Flyes', 'Arnold Press',
-        'Cable Lateral Raise', 'Upright Row', 'Shrugs'
-    ],
-    legs: [
-        'Squat', 'Front Squat', 'Leg Press', 'Hack Squat',
-        'Romanian Deadlift', 'Leg Curl', 'Leg Extension',
-        'Bulgarian Split Squat', 'Lunges', 'Calf Raises',
-        'Hip Thrust', 'Goblet Squat', 'Sumo Deadlift'
-    ],
-    arms: [
-        'Barbell Curl', 'Dumbbell Curl', 'Hammer Curl',
-        'Preacher Curl', 'Cable Curl', 'Tricep Pushdown',
-        'Skull Crushers', 'Overhead Tricep Extension',
-        'Dips', 'Close Grip Bench Press'
-    ],
-    core: [
-        'Plank', 'Hanging Leg Raise', 'Cable Crunch',
-        'Ab Wheel Rollout', 'Russian Twist', 'Decline Sit Up'
-    ]
-};
-
-// Split configurations
-const SPLITS = [
-    { id: 'push', name: 'Push', emoji: '⬆️' },
-    { id: 'pull', name: 'Pull', emoji: '⬇️' },
-    { id: 'legs', name: 'Legs', emoji: '🦵' },
-    { id: 'upper', name: 'Upper', emoji: '💪' },
-    { id: 'lower', name: 'Lower', emoji: '🏋️' },
-    { id: 'full', name: 'Full Body', emoji: '🔥' },
-    { id: 'chest', name: 'Chest', emoji: '🫁' },
-    { id: 'back', name: 'Back', emoji: '🔙' },
-    { id: 'arms', name: 'Arms', emoji: '💪' }
+// Training Program - Customize your days here
+const PROGRAM = [
+    {
+        id: 'day1',
+        name: 'Day 1',
+        label: 'Push',
+        exercises: [
+            { name: 'Bench Press', muscle: 'Chest' },
+            { name: 'Incline Dumbbell Press', muscle: 'Upper Chest' },
+            { name: 'Overhead Press', muscle: 'Shoulders' },
+            { name: 'Lateral Raise', muscle: 'Side Delts' },
+            { name: 'Tricep Pushdown', muscle: 'Triceps' },
+            { name: 'Overhead Tricep Extension', muscle: 'Triceps' }
+        ]
+    },
+    {
+        id: 'day2',
+        name: 'Day 2',
+        label: 'Pull',
+        exercises: [
+            { name: 'Barbell Row', muscle: 'Back' },
+            { name: 'Pull Ups', muscle: 'Lats' },
+            { name: 'Seated Cable Row', muscle: 'Mid Back' },
+            { name: 'Face Pulls', muscle: 'Rear Delts' },
+            { name: 'Barbell Curl', muscle: 'Biceps' },
+            { name: 'Hammer Curl', muscle: 'Biceps' }
+        ]
+    },
+    {
+        id: 'day3',
+        name: 'Day 3',
+        label: 'Legs',
+        exercises: [
+            { name: 'Squat', muscle: 'Quads' },
+            { name: 'Romanian Deadlift', muscle: 'Hamstrings' },
+            { name: 'Leg Press', muscle: 'Quads' },
+            { name: 'Leg Curl', muscle: 'Hamstrings' },
+            { name: 'Leg Extension', muscle: 'Quads' },
+            { name: 'Calf Raises', muscle: 'Calves' }
+        ]
+    },
+    {
+        id: 'day4',
+        name: 'Day 4',
+        label: 'Upper',
+        exercises: [
+            { name: 'Incline Bench Press', muscle: 'Upper Chest' },
+            { name: 'Dumbbell Row', muscle: 'Back' },
+            { name: 'Dumbbell Shoulder Press', muscle: 'Shoulders' },
+            { name: 'Lat Pulldown', muscle: 'Lats' },
+            { name: 'Cable Flyes', muscle: 'Chest' },
+            { name: 'Reverse Flyes', muscle: 'Rear Delts' }
+        ]
+    },
+    {
+        id: 'day5',
+        name: 'Day 5',
+        label: 'Lower',
+        exercises: [
+            { name: 'Deadlift', muscle: 'Full Body' },
+            { name: 'Front Squat', muscle: 'Quads' },
+            { name: 'Hip Thrust', muscle: 'Glutes' },
+            { name: 'Bulgarian Split Squat', muscle: 'Quads' },
+            { name: 'Leg Curl', muscle: 'Hamstrings' },
+            { name: 'Calf Raises', muscle: 'Calves' }
+        ]
+    },
+    {
+        id: 'day6',
+        name: 'Day 6',
+        label: 'Arms & Shoulders',
+        exercises: [
+            { name: 'Arnold Press', muscle: 'Shoulders' },
+            { name: 'Lateral Raise', muscle: 'Side Delts' },
+            { name: 'Close Grip Bench Press', muscle: 'Triceps' },
+            { name: 'Preacher Curl', muscle: 'Biceps' },
+            { name: 'Skull Crushers', muscle: 'Triceps' },
+            { name: 'Cable Curl', muscle: 'Biceps' }
+        ]
+    }
 ];
 
 // ═══════════════════════════════════════════════════════════
@@ -59,6 +91,7 @@ const SPLITS = [
 class IronPump {
     constructor() {
         this.currentWorkout = null;
+        this.currentExerciseIndex = 0;
         this.timerInterval = null;
         this.restInterval = null;
         this.restDuration = 120;
@@ -78,9 +111,7 @@ class IronPump {
     onReady() {
         this.setupLoading();
         this.setupNav();
-        this.renderSplits();
-        this.setupExecute();
-        this.setupModal();
+        this.renderDays();
         this.setupRestTimer();
         this.setupComplete();
         this.loadHistory();
@@ -88,13 +119,12 @@ class IronPump {
     }
 
     // ─────────────────────────────────────
-    // Loading Screen
+    // Loading
     // ─────────────────────────────────────
     setupLoading() {
         setTimeout(() => {
             document.getElementById('loader').classList.add('hidden');
             document.getElementById('app').classList.add('loaded');
-
             setTimeout(() => {
                 this.animateProgress();
                 this.animateCounters();
@@ -107,50 +137,37 @@ class IronPump {
     // Navigation
     // ─────────────────────────────────────
     setupNav() {
-        const btns = document.querySelectorAll('.bnav');
-        btns.forEach(btn => {
+        document.querySelectorAll('.bnav').forEach(btn => {
             btn.addEventListener('click', () => {
                 const page = btn.dataset.page;
-
-                // Update buttons
-                btns.forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.bnav').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
-
-                // Update pages
                 document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
                 document.getElementById('page-' + page).classList.add('active');
 
-                // Refresh data when switching
                 if (page === 'intel') {
                     this.updateIntel();
                     this.animateProgress();
                     this.drawChart();
                 }
-                if (page === 'history') {
-                    this.loadHistory();
-                }
-
+                if (page === 'history') this.loadHistory();
                 this.vibrate(10);
             });
         });
     }
 
     // ─────────────────────────────────────
-    // Circular Progress Animation
+    // Progress Animation
     // ─────────────────────────────────────
     animateProgress() {
         document.querySelectorAll('.cprog').forEach(el => {
             const val = parseInt(el.dataset.val) || 0;
             const ring = el.querySelector('.cprog-ring');
-            const circ = 2 * Math.PI * 40; // r=40
+            const circ = 2 * Math.PI * 40;
             const offset = circ - (val / 100) * circ;
-
             ring.style.strokeDasharray = circ;
             ring.style.strokeDashoffset = circ;
-
-            setTimeout(() => {
-                ring.style.strokeDashoffset = offset;
-            }, 300);
+            setTimeout(() => { ring.style.strokeDashoffset = offset; }, 300);
         });
     }
 
@@ -158,118 +175,87 @@ class IronPump {
     // Counter Animation
     // ─────────────────────────────────────
     animateCounters() {
-        const counters = {
+        const targets = {
             'intel-vol': this.getWeeklyVolume(),
             'intel-sessions': this.getMonthSessions(),
             'intel-prs': 0,
             'intel-streak': this.getStreak()
         };
-
-        Object.keys(counters).forEach(id => {
+        Object.keys(targets).forEach(id => {
             const el = document.getElementById(id);
             if (!el) return;
-            const target = counters[id];
-            const duration = 1500;
+            const target = targets[id];
             const start = performance.now();
-
             const tick = (now) => {
-                const elapsed = now - start;
-                const progress = Math.min(elapsed / duration, 1);
-                const eased = 1 - Math.pow(1 - progress, 3);
-                el.textContent = Math.round(target * eased).toLocaleString();
-                if (progress < 1) requestAnimationFrame(tick);
+                const p = Math.min((now - start) / 1500, 1);
+                const e = 1 - Math.pow(1 - p, 3);
+                el.textContent = Math.round(target * e).toLocaleString();
+                if (p < 1) requestAnimationFrame(tick);
             };
-
             setTimeout(() => requestAnimationFrame(tick), 500);
         });
     }
 
     // ─────────────────────────────────────
-    // Chart Drawing
+    // Chart
     // ─────────────────────────────────────
     drawChart() {
         const canvas = document.getElementById('volChart');
         if (!canvas) return;
-
         const ctx = canvas.getContext('2d');
         const dpr = window.devicePixelRatio || 1;
         const rect = canvas.getBoundingClientRect();
         canvas.width = rect.width * dpr;
         canvas.height = rect.height * dpr;
         ctx.scale(dpr, dpr);
-
-        const w = rect.width;
-        const h = rect.height;
+        const w = rect.width, h = rect.height;
         const pad = { t: 20, r: 15, b: 30, l: 45 };
-        const cw = w - pad.l - pad.r;
-        const ch = h - pad.t - pad.b;
+        const cw = w - pad.l - pad.r, ch = h - pad.t - pad.b;
 
-        // Get real data from saved workouts
-        const weeklyData = this.getWeeklyChartData();
-        const data = weeklyData.values;
-        const labels = weeklyData.labels;
-
-        if (data.length < 2) {
+        const wd = this.getWeeklyChartData();
+        if (wd.values.length < 2) {
             ctx.fillStyle = 'rgba(255,255,255,0.3)';
             ctx.font = '14px Space Grotesk';
             ctx.textAlign = 'center';
-            ctx.fillText('Complete workouts to see chart data', w / 2, h / 2);
+            ctx.fillText('Complete workouts to see trends', w / 2, h / 2);
             return;
         }
 
-        const maxVal = Math.max(...data) * 1.15 || 100;
-        const minVal = 0;
-        const range = maxVal - minVal;
-
+        const data = wd.values, labels = wd.labels;
+        const mx = Math.max(...data) * 1.15 || 100;
         const xS = (i) => pad.l + (i / (data.length - 1)) * cw;
-        const yS = (v) => pad.t + ch - ((v - minVal) / range) * ch;
+        const yS = (v) => pad.t + ch - (v / mx) * ch;
 
         const draw = (progress) => {
             ctx.clearRect(0, 0, w, h);
-
-            // Grid
             ctx.strokeStyle = 'rgba(255,255,255,0.05)';
             ctx.lineWidth = 1;
             for (let i = 0; i <= 4; i++) {
                 const y = pad.t + (i / 4) * ch;
-                ctx.beginPath();
-                ctx.moveTo(pad.l, y);
-                ctx.lineTo(w - pad.r, y);
-                ctx.stroke();
-
-                const val = maxVal - (i / 4) * range;
+                ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(w - pad.r, y); ctx.stroke();
                 ctx.fillStyle = 'rgba(255,255,255,0.4)';
                 ctx.font = '10px JetBrains Mono';
                 ctx.textAlign = 'right';
-                ctx.fillText(Math.round(val).toLocaleString(), pad.l - 8, y + 4);
+                ctx.fillText(Math.round(mx - (i / 4) * mx).toLocaleString(), pad.l - 8, y + 4);
             }
-
-            // Labels
             ctx.textAlign = 'center';
-            ctx.fillStyle = 'rgba(255,255,255,0.4)';
-            labels.forEach((l, i) => {
-                ctx.fillText(l, xS(i), h - 8);
-            });
+            labels.forEach((l, i) => { ctx.fillText(l, xS(i), h - 8); });
 
             const len = Math.floor(data.length * progress);
             if (len < 1) return;
 
-            // Gradient fill
             const grad = ctx.createLinearGradient(0, pad.t, 0, h - pad.b);
             grad.addColorStop(0, 'rgba(0,212,255,0.3)');
             grad.addColorStop(1, 'rgba(0,212,255,0)');
 
             ctx.beginPath();
             ctx.moveTo(xS(0), h - pad.b);
-            for (let i = 0; i <= Math.min(len, data.length - 1); i++) {
-                ctx.lineTo(xS(i), yS(data[i]));
-            }
+            for (let i = 0; i <= Math.min(len, data.length - 1); i++) ctx.lineTo(xS(i), yS(data[i]));
             ctx.lineTo(xS(Math.min(len, data.length - 1)), h - pad.b);
             ctx.closePath();
             ctx.fillStyle = grad;
             ctx.fill();
 
-            // Line
             ctx.shadowColor = 'rgba(0,212,255,0.5)';
             ctx.shadowBlur = 15;
             ctx.beginPath();
@@ -284,90 +270,78 @@ class IronPump {
             ctx.stroke();
             ctx.shadowBlur = 0;
 
-            // Points
             for (let i = 0; i <= Math.min(len, data.length - 1); i++) {
-                const x = xS(i);
-                const y = yS(data[i]);
-
-                ctx.beginPath();
-                ctx.arc(x, y, 6, 0, Math.PI * 2);
-                ctx.fillStyle = 'rgba(0,212,255,0.2)';
-                ctx.fill();
-
-                ctx.beginPath();
-                ctx.arc(x, y, 4, 0, Math.PI * 2);
-                ctx.fillStyle = '#00d4ff';
-                ctx.fill();
-
-                ctx.beginPath();
-                ctx.arc(x, y, 2, 0, Math.PI * 2);
-                ctx.fillStyle = '#fff';
-                ctx.fill();
+                const x = xS(i), y = yS(data[i]);
+                ctx.beginPath(); ctx.arc(x, y, 6, 0, Math.PI * 2); ctx.fillStyle = 'rgba(0,212,255,0.2)'; ctx.fill();
+                ctx.beginPath(); ctx.arc(x, y, 4, 0, Math.PI * 2); ctx.fillStyle = '#00d4ff'; ctx.fill();
+                ctx.beginPath(); ctx.arc(x, y, 2, 0, Math.PI * 2); ctx.fillStyle = '#fff'; ctx.fill();
             }
         };
 
-        // Animate
-        const startTime = performance.now();
-        const animate = (now) => {
-            const p = Math.min((now - startTime) / 1500, 1);
-            const ep = 1 - Math.pow(1 - p, 3);
-            draw(ep);
-            if (p < 1) requestAnimationFrame(animate);
+        const st = performance.now();
+        const anim = (now) => {
+            const p = Math.min((now - st) / 1500, 1);
+            draw(1 - Math.pow(1 - p, 3));
+            if (p < 1) requestAnimationFrame(anim);
         };
-        requestAnimationFrame(animate);
+        requestAnimationFrame(anim);
     }
 
     // ─────────────────────────────────────
-    // Execute - Split Selection
+    // Day Selection
     // ─────────────────────────────────────
-    renderSplits() {
-        const grid = document.getElementById('splitGrid');
+    renderDays() {
+        const grid = document.getElementById('dayGrid');
         if (!grid) return;
-        grid.innerHTML = SPLITS.map(s => `
-            <button class="split-btn" data-split="${s.id}">
-                <span class="split-emoji">${s.emoji}</span>
-                <span class="split-name">${s.name}</span>
+        grid.innerHTML = PROGRAM.map(day => `
+            <button class="day-btn" data-day="${day.id}">
+                <span class="day-num">${day.name}</span>
+                <span class="day-label">${day.label}</span>
+                <span class="day-count">${day.exercises.length} exercises</span>
             </button>
         `).join('');
-    }
 
-    setupExecute() {
-        // Split selection
-        document.getElementById('splitGrid').addEventListener('click', (e) => {
-            const btn = e.target.closest('.split-btn');
+        grid.addEventListener('click', (e) => {
+            const btn = e.target.closest('.day-btn');
             if (!btn) return;
-            this.startWorkout(btn.dataset.split);
-        });
-
-        // Add exercise
-        document.getElementById('addExBtn').addEventListener('click', () => {
-            this.openExerciseModal();
-        });
-
-        // Finish workout
-        document.getElementById('woFinish').addEventListener('click', () => {
-            this.finishWorkout();
+            this.startWorkout(btn.dataset.day);
         });
     }
 
-    startWorkout(splitId) {
-        const split = SPLITS.find(s => s.id === splitId);
+    // ─────────────────────────────────────
+    // Start Workout
+    // ─────────────────────────────────────
+    startWorkout(dayId) {
+        const day = PROGRAM.find(d => d.id === dayId);
+        if (!day) return;
+
         this.currentWorkout = {
-            split: splitId,
-            splitName: split.name,
-            exercises: [],
+            dayId: dayId,
+            dayName: day.name,
+            dayLabel: day.label,
+            splitName: day.name + ' — ' + day.label,
+            exercises: day.exercises.map(ex => ({
+                name: ex.name,
+                muscle: ex.muscle,
+                sets: [],
+                skipped: false,
+                completed: false
+            })),
             startTime: new Date().toISOString(),
             totalVolume: 0,
             totalSets: 0
         };
 
+        this.currentExerciseIndex = 0;
         this.startTime = Date.now();
         this.startTimer();
 
-        document.getElementById('woSplit').textContent = split.emoji + ' ' + split.name;
         document.getElementById('woInactive').classList.add('hidden');
         document.getElementById('woActive').classList.remove('hidden');
 
+        this.renderCurrentExercise();
+        this.updateWorkoutHeader();
+        this.updateLiveStats();
         this.vibrate(20);
     }
 
@@ -382,207 +356,195 @@ class IronPump {
         }, 1000);
     }
 
+    updateWorkoutHeader() {
+        const wo = this.currentWorkout;
+        document.getElementById('woSplit').textContent = wo.dayName + ' — ' + wo.dayLabel;
+
+        // Progress indicator
+        const total = wo.exercises.length;
+        const done = wo.exercises.filter(e => e.completed || e.skipped).length;
+        document.getElementById('woProgress').textContent = `${done}/${total}`;
+    }
+
     // ─────────────────────────────────────
-    // Exercise Modal
+    // Current Exercise View
     // ─────────────────────────────────────
-    setupModal() {
-        const overlay = document.getElementById('exModal');
-        const search = document.getElementById('exSearch');
+    renderCurrentExercise() {
+        const container = document.getElementById('exContainer');
+        const wo = this.currentWorkout;
 
-        overlay.addEventListener('click', (e) => {
-            if (e.target === overlay) this.closeModal();
-        });
-
-        search.addEventListener('input', () => {
-            this.filterExercises(search.value);
-        });
-    }
-
-    openExerciseModal() {
-        const modal = document.getElementById('exModal');
-        const search = document.getElementById('exSearch');
-        modal.classList.remove('hidden');
-        search.value = '';
-        this.filterExercises('');
-        setTimeout(() => search.focus(), 300);
-        this.vibrate(10);
-    }
-
-    closeModal() {
-        document.getElementById('exModal').classList.add('hidden');
-    }
-
-    filterExercises(query) {
-        const results = document.getElementById('exResults');
-        const q = query.toLowerCase().trim();
-        let html = '';
-
-        Object.keys(EXERCISES).forEach(cat => {
-            const filtered = EXERCISES[cat].filter(ex =>
-                ex.toLowerCase().includes(q)
-            );
-
-            if (filtered.length > 0) {
-                html += `<div class="ex-cat">${cat}</div>`;
-                filtered.forEach(ex => {
-                    html += `<div class="ex-result" data-name="${ex}" data-cat="${cat}">
-                        <span>${ex}</span>
-                        <span class="ex-result-muscle">${cat}</span>
-                    </div>`;
-                });
-            }
-        });
-
-        if (html === '') {
-            html = '<p style="text-align:center;color:var(--text3);padding:20px">No exercises found</p>';
+        if (this.currentExerciseIndex >= wo.exercises.length) {
+            this.finishWorkout();
+            return;
         }
 
-        results.innerHTML = html;
+        const ex = wo.exercises[this.currentExerciseIndex];
+        const exNum = this.currentExerciseIndex + 1;
+        const exTotal = wo.exercises.length;
+        const hasData = ex.sets.some(s => parseFloat(s.weight) > 0 && parseFloat(s.reps) > 0);
 
-        // Add click handlers
-        results.querySelectorAll('.ex-result').forEach(item => {
-            item.addEventListener('click', () => {
-                this.addExercise(item.dataset.name, item.dataset.cat);
-                this.closeModal();
-            });
-        });
-    }
-
-    // ─────────────────────────────────────
-    // Exercise Management
-    // ─────────────────────────────────────
-    addExercise(name, category) {
-        const exercise = {
-            id: Date.now(),
-            name: name,
-            category: category,
-            sets: [{ weight: '', reps: '' }]
-        };
-
-        this.currentWorkout.exercises.push(exercise);
-        this.renderExercises();
-        this.updateLiveStats();
-        this.vibrate(15);
-    }
-
-    renderExercises() {
-        const list = document.getElementById('exList');
-        list.innerHTML = '';
-
-        this.currentWorkout.exercises.forEach((ex, ei) => {
-            const card = document.createElement('div');
-            card.className = 'ex-card';
-
-            let setsHtml = '';
-            if (ex.sets.length === 0) {
-                setsHtml = '<p class="no-sets">No sets yet</p>';
-            } else {
-                setsHtml = ex.sets.map((set, si) => `
-                    <div class="set-row">
-                        <span class="set-num">${si + 1}</span>
-                        <input type="number" class="set-input" placeholder="kg" 
-                            value="${set.weight}" 
-                            data-ei="${ei}" data-si="${si}" data-field="weight"
-                            inputmode="decimal">
-                        <input type="number" class="set-input" placeholder="reps" 
-                            value="${set.reps}" 
-                            data-ei="${ei}" data-si="${si}" data-field="reps"
-                            inputmode="numeric">
-                        <button class="set-del" data-ei="${ei}" data-si="${si}">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <line x1="18" y1="6" x2="6" y2="18"/>
-                                <line x1="6" y1="6" x2="18" y2="18"/>
-                            </svg>
-                        </button>
-                    </div>
-                `).join('');
-            }
-
-            card.innerHTML = `
-                <div class="ex-head">
-                    <span class="ex-name">${ex.name}</span>
-                    <button class="ex-del" data-ei="${ei}">
+        // Build sets HTML
+        let setsHtml = '';
+        if (ex.sets.length === 0) {
+            setsHtml = '<p class="no-sets">Tap "Add Set" to begin</p>';
+        } else {
+            setsHtml = ex.sets.map((set, si) => `
+                <div class="set-row" style="animation: fadeUp 0.3s ease ${si * 0.05}s both">
+                    <span class="set-num">${si + 1}</span>
+                    <input type="number" class="set-input" placeholder="kg"
+                        value="${set.weight}" data-si="${si}" data-field="weight"
+                        inputmode="decimal">
+                    <input type="number" class="set-input" placeholder="reps"
+                        value="${set.reps}" data-si="${si}" data-field="reps"
+                        inputmode="numeric">
+                    <button class="set-del" data-si="${si}">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <polyline points="3 6 5 6 21 6"/>
-                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                            <line x1="18" y1="6" x2="6" y2="18"/>
+                            <line x1="6" y1="6" x2="18" y2="18"/>
                         </svg>
                     </button>
                 </div>
-                <div class="sets-list">${setsHtml}</div>
-                <button class="add-set" data-ei="${ei}">
+            `).join('');
+        }
+
+        // Skip button logic
+        let skipHtml = '';
+        if (!hasData) {
+            skipHtml = `
+                <button class="skip-btn skip-exercise" id="skipBtn">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <line x1="12" y1="5" x2="12" y2="19"/>
-                        <line x1="5" y1="12" x2="19" y2="12"/>
+                        <polygon points="5 4 15 12 5 20 5 4"/>
+                        <line x1="19" y1="5" x2="19" y2="19"/>
                     </svg>
-                    Add Set
-                </button>
-            `;
+                    Skip Exercise
+                </button>`;
+        } else {
+            skipHtml = `
+                <button class="skip-btn skip-set" id="skipBtn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polygon points="5 4 15 12 5 20 5 4"/>
+                        <line x1="19" y1="5" x2="19" y2="19"/>
+                    </svg>
+                    Skip Set
+                </button>`;
+        }
 
-            list.appendChild(card);
+        container.innerHTML = `
+            <div class="current-ex" style="animation: fadeUp 0.4s ease">
+                <div class="ex-progress-bar">
+                    <div class="ex-progress-fill" style="width: ${(exNum / exTotal) * 100}%"></div>
+                </div>
+                <div class="ex-counter">${exNum} of ${exTotal}</div>
+                <div class="ex-title-section">
+                    <h3 class="ex-title">${ex.name}</h3>
+                    <span class="ex-muscle">${ex.muscle}</span>
+                </div>
+                <div class="sets-list">${setsHtml}</div>
+                <div class="ex-actions">
+                    <button class="add-set-btn" id="addSetBtn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="12" y1="5" x2="12" y2="19"/>
+                            <line x1="5" y1="12" x2="19" y2="12"/>
+                        </svg>
+                        Add Set
+                    </button>
+                    ${skipHtml}
+                    ${hasData ? `
+                    <button class="finish-ex-btn" id="finishExBtn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="9 11 12 14 22 4"/>
+                            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+                        </svg>
+                        Finish Exercise
+                    </button>` : ''}
+                </div>
+            </div>
+        `;
 
-            // Event listeners for this card
-            // Set inputs
-            card.querySelectorAll('.set-input').forEach(input => {
-                input.addEventListener('change', (e) => {
-                    const ei2 = parseInt(e.target.dataset.ei);
-                    const si = parseInt(e.target.dataset.si);
-                    const field = e.target.dataset.field;
-                    this.currentWorkout.exercises[ei2].sets[si][field] = e.target.value;
-                    this.updateLiveStats();
-                });
-            });
+        // Event Listeners
+        // Add Set
+        document.getElementById('addSetBtn').addEventListener('click', () => {
+            ex.sets.push({ weight: '', reps: '' });
+            this.renderCurrentExercise();
+            this.vibrate(10);
+        });
 
-            // Delete set
-            card.querySelectorAll('.set-del').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    const ei2 = parseInt(btn.dataset.ei);
-                    const si = parseInt(btn.dataset.si);
-                    this.currentWorkout.exercises[ei2].sets.splice(si, 1);
-                    this.renderExercises();
-                    this.updateLiveStats();
-                    this.vibrate(10);
-                });
-            });
-
-            // Add set
-            card.querySelector('.add-set').addEventListener('click', () => {
-                this.currentWorkout.exercises[ei].sets.push({ weight: '', reps: '' });
-                this.renderExercises();
-                this.vibrate(10);
-
-                // Start rest timer
-                this.startRest();
-            });
-
-            // Delete exercise
-            card.querySelector('.ex-del').addEventListener('click', () => {
-                this.currentWorkout.exercises.splice(ei, 1);
-                this.renderExercises();
+        // Skip Button
+        document.getElementById('skipBtn').addEventListener('click', () => {
+            if (!hasData) {
+                // Skip entire exercise
+                ex.skipped = true;
+                ex.completed = true;
+                this.currentExerciseIndex++;
+                this.updateWorkoutHeader();
+                this.renderCurrentExercise();
+                this.vibrate(15);
+            } else {
+                // Skip adding more sets, keep current data
+                ex.completed = true;
+                this.currentExerciseIndex++;
+                this.updateWorkoutHeader();
                 this.updateLiveStats();
+                this.renderCurrentExercise();
+                this.startRest();
+                this.vibrate(15);
+            }
+        });
+
+        // Finish Exercise
+        const finishExBtn = document.getElementById('finishExBtn');
+        if (finishExBtn) {
+            finishExBtn.addEventListener('click', () => {
+                ex.completed = true;
+                this.currentExerciseIndex++;
+                this.updateWorkoutHeader();
+                this.updateLiveStats();
+                this.renderCurrentExercise();
+                this.startRest();
                 this.vibrate(20);
+            });
+        }
+
+        // Set Inputs
+        container.querySelectorAll('.set-input').forEach(input => {
+            input.addEventListener('change', (e) => {
+                const si = parseInt(e.target.dataset.si);
+                const field = e.target.dataset.field;
+                ex.sets[si][field] = e.target.value;
+                this.updateLiveStats();
+                this.renderCurrentExercise();
+            });
+            input.addEventListener('focus', () => {
+                input.select();
+            });
+        });
+
+        // Delete Set
+        container.querySelectorAll('.set-del').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const si = parseInt(btn.dataset.si);
+                ex.sets.splice(si, 1);
+                this.renderCurrentExercise();
+                this.updateLiveStats();
+                this.vibrate(10);
             });
         });
     }
 
     updateLiveStats() {
-        let vol = 0;
-        let sets = 0;
-
+        if (!this.currentWorkout) return;
+        let vol = 0, sets = 0;
         this.currentWorkout.exercises.forEach(ex => {
             ex.sets.forEach(set => {
                 const w = parseFloat(set.weight);
                 const r = parseFloat(set.reps);
-                if (w > 0 && r > 0) {
-                    vol += w * r;
-                    sets++;
-                }
+                if (w > 0 && r > 0) { vol += w * r; sets++; }
             });
         });
-
         document.getElementById('liveVol').textContent = Math.round(vol).toLocaleString();
         document.getElementById('liveSets').textContent = sets;
-        document.getElementById('liveEx').textContent = this.currentWorkout.exercises.length;
-
+        document.getElementById('liveEx').textContent =
+            this.currentWorkout.exercises.filter(e => e.completed && !e.skipped).length;
         this.currentWorkout.totalVolume = vol;
         this.currentWorkout.totalSets = sets;
     }
@@ -591,10 +553,7 @@ class IronPump {
     // Rest Timer
     // ─────────────────────────────────────
     setupRestTimer() {
-        document.getElementById('restSkip').addEventListener('click', () => {
-            this.stopRest();
-        });
-
+        document.getElementById('restSkip').addEventListener('click', () => this.stopRest());
         document.getElementById('restAdd30').addEventListener('click', () => {
             this.restRemaining += 30;
             this.vibrate(10);
@@ -602,42 +561,22 @@ class IronPump {
     }
 
     startRest() {
-        // Only start if there are completed sets
-        let hasSets = false;
-        this.currentWorkout.exercises.forEach(ex => {
-            ex.sets.forEach(set => {
-                if (parseFloat(set.weight) > 0 && parseFloat(set.reps) > 0) {
-                    hasSets = true;
-                }
-            });
-        });
-        if (!hasSets) return;
-
         this.restRemaining = this.restDuration;
-        const totalDuration = this.restDuration;
-
+        const total = this.restDuration;
         document.getElementById('restOverlay').classList.remove('hidden');
-        this.updateRestDisplay(totalDuration);
-
+        this.updateRestDisplay(total);
         if (this.restInterval) clearInterval(this.restInterval);
         this.restInterval = setInterval(() => {
             this.restRemaining--;
-            this.updateRestDisplay(totalDuration);
-
-            if (this.restRemaining <= 0) {
-                this.stopRest();
-                this.vibrate(50);
-            }
+            this.updateRestDisplay(total);
+            if (this.restRemaining <= 0) { this.stopRest(); this.vibrate(50); }
         }, 1000);
     }
 
     updateRestDisplay(total) {
         const min = Math.floor(this.restRemaining / 60);
         const sec = this.restRemaining % 60;
-        document.getElementById('restTime').textContent =
-            min + ':' + sec.toString().padStart(2, '0');
-
-        // Update ring
+        document.getElementById('restTime').textContent = min + ':' + sec.toString().padStart(2, '0');
         const circ = 2 * Math.PI * 90;
         const offset = circ - (this.restRemaining / total) * circ;
         const ring = document.getElementById('restRingFill');
@@ -661,39 +600,22 @@ class IronPump {
 
     finishWorkout() {
         if (!this.currentWorkout) return;
-
-        // Check if there's any data
-        let hasData = false;
-        this.currentWorkout.exercises.forEach(ex => {
-            ex.sets.forEach(set => {
-                if (parseFloat(set.weight) > 0 && parseFloat(set.reps) > 0) {
-                    hasData = true;
-                }
-            });
-        });
-
-        if (!hasData) {
-            alert('Log at least one set with weight and reps before finishing!');
-            return;
-        }
-
-        // Stop timer
         if (this.timerInterval) clearInterval(this.timerInterval);
         this.stopRest();
 
-        // Calculate duration
         const duration = Math.round((Date.now() - this.startTime) / 60000);
-
-        // Save workout
         this.currentWorkout.endTime = new Date().toISOString();
         this.currentWorkout.duration = duration;
         this.updateLiveStats();
 
-        const workouts = JSON.parse(localStorage.getItem('ironpump_workouts') || '[]');
-        workouts.push(this.currentWorkout);
-        localStorage.setItem('ironpump_workouts', JSON.stringify(workouts));
+        // Only save if there's actual data
+        if (this.currentWorkout.totalSets > 0) {
+            const workouts = JSON.parse(localStorage.getItem('ironpump_workouts') || '[]');
+            workouts.push(this.currentWorkout);
+            localStorage.setItem('ironpump_workouts', JSON.stringify(workouts));
+        }
 
-        // Show complete screen
+        // Show complete
         document.getElementById('compVol').textContent = Math.round(this.currentWorkout.totalVolume).toLocaleString();
         document.getElementById('compSets').textContent = this.currentWorkout.totalSets;
         document.getElementById('compTime').textContent = duration;
@@ -702,12 +624,11 @@ class IronPump {
         // Reset
         document.getElementById('woActive').classList.add('hidden');
         document.getElementById('woInactive').classList.remove('hidden');
-        document.getElementById('exList').innerHTML = '';
+        document.getElementById('exContainer').innerHTML = '';
         document.getElementById('liveVol').textContent = '0';
         document.getElementById('liveSets').textContent = '0';
         document.getElementById('liveEx').textContent = '0';
         document.getElementById('woTimer').textContent = '00:00';
-
         this.currentWorkout = null;
         this.vibrate(30);
     }
@@ -718,32 +639,25 @@ class IronPump {
     loadHistory() {
         const workouts = JSON.parse(localStorage.getItem('ironpump_workouts') || '[]');
         const list = document.getElementById('historyList');
-
         if (workouts.length === 0) {
-            list.innerHTML = '<div class="no-history"><p>No workouts yet.</p><p>Complete your first workout!</p></div>';
+            list.innerHTML = '<div class="no-history"><p>No workouts yet.</p><p>Complete your first session!</p></div>';
             return;
         }
-
         list.innerHTML = workouts.slice().reverse().map(wo => {
             const date = new Date(wo.startTime);
-            const dateStr = date.toLocaleDateString('en-US', {
-                weekday: 'short', month: 'short', day: 'numeric'
-            });
-            const dur = wo.duration || 0;
-
+            const dateStr = date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
             return `
                 <div class="history-card">
                     <div class="history-top">
-                        <span class="history-split">${wo.splitName || wo.split}</span>
+                        <span class="history-split">${wo.splitName || wo.dayName + ' — ' + wo.dayLabel}</span>
                         <span class="history-date">${dateStr}</span>
                     </div>
                     <div class="history-stats">
                         <span class="history-stat">Vol: <span>${Math.round(wo.totalVolume || 0).toLocaleString()} kg</span></span>
                         <span class="history-stat">Sets: <span>${wo.totalSets || 0}</span></span>
-                        <span class="history-stat">Time: <span>${dur} min</span></span>
+                        <span class="history-stat">Time: <span>${wo.duration || 0} min</span></span>
                     </div>
-                </div>
-            `;
+                </div>`;
         }).join('');
     }
 
@@ -751,105 +665,52 @@ class IronPump {
     // Intel Data
     // ─────────────────────────────────────
     updateIntel() {
-        const vol = this.getWeeklyVolume();
-        const sessions = this.getMonthSessions();
-        const streak = this.getStreak();
-
-        document.getElementById('intel-vol').textContent = Math.round(vol).toLocaleString();
-        document.getElementById('intel-sessions').textContent = sessions;
-        document.getElementById('intel-streak').textContent = streak;
+        document.getElementById('intel-vol').textContent = Math.round(this.getWeeklyVolume()).toLocaleString();
+        document.getElementById('intel-sessions').textContent = this.getMonthSessions();
+        document.getElementById('intel-streak').textContent = this.getStreak();
     }
 
     getWeeklyVolume() {
         const workouts = JSON.parse(localStorage.getItem('ironpump_workouts') || '[]');
         const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-        let vol = 0;
-
-        workouts.forEach(wo => {
-            if (new Date(wo.startTime).getTime() > weekAgo) {
-                vol += wo.totalVolume || 0;
-            }
-        });
-
-        return vol;
+        return workouts.reduce((sum, wo) => {
+            return new Date(wo.startTime).getTime() > weekAgo ? sum + (wo.totalVolume || 0) : sum;
+        }, 0);
     }
 
     getMonthSessions() {
         const workouts = JSON.parse(localStorage.getItem('ironpump_workouts') || '[]');
         const monthAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
-        let count = 0;
-
-        workouts.forEach(wo => {
-            if (new Date(wo.startTime).getTime() > monthAgo) {
-                count++;
-            }
-        });
-
-        return count;
+        return workouts.filter(wo => new Date(wo.startTime).getTime() > monthAgo).length;
     }
 
     getStreak() {
         const workouts = JSON.parse(localStorage.getItem('ironpump_workouts') || '[]');
         if (workouts.length === 0) return 0;
-
-        const dates = workouts.map(wo => {
-            const d = new Date(wo.startTime);
-            return d.toDateString();
-        });
-
-        const unique = [...new Set(dates)].sort((a, b) =>
-            new Date(b) - new Date(a)
-        );
-
+        const dates = [...new Set(workouts.map(wo => new Date(wo.startTime).toDateString()))].sort((a, b) => new Date(b) - new Date(a));
         let streak = 1;
-        for (let i = 0; i < unique.length - 1; i++) {
-            const curr = new Date(unique[i]);
-            const prev = new Date(unique[i + 1]);
-            const diff = (curr - prev) / (24 * 60 * 60 * 1000);
-
-            if (diff <= 1.5) {
-                streak++;
-            } else {
-                break;
-            }
+        for (let i = 0; i < dates.length - 1; i++) {
+            if ((new Date(dates[i]) - new Date(dates[i + 1])) / 86400000 <= 1.5) streak++;
+            else break;
         }
-
         return streak;
     }
 
     getWeeklyChartData() {
         const workouts = JSON.parse(localStorage.getItem('ironpump_workouts') || '[]');
         const weeks = {};
-        const labels = [];
-        const values = [];
-
         workouts.forEach(wo => {
-            const date = new Date(wo.startTime);
-            const weekStart = new Date(date);
-            weekStart.setDate(date.getDate() - date.getDay());
-            const key = weekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-
-            if (!weeks[key]) weeks[key] = 0;
-            weeks[key] += wo.totalVolume || 0;
+            const d = new Date(wo.startTime);
+            const ws = new Date(d); ws.setDate(d.getDate() - d.getDay());
+            const key = ws.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            weeks[key] = (weeks[key] || 0) + (wo.totalVolume || 0);
         });
-
-        Object.keys(weeks).forEach(key => {
-            labels.push(key);
-            values.push(Math.round(weeks[key]));
-        });
-
-        return { labels, values };
+        return { labels: Object.keys(weeks), values: Object.values(weeks).map(v => Math.round(v)) };
     }
 
-    // ─────────────────────────────────────
-    // Utilities
-    // ─────────────────────────────────────
     vibrate(ms = 10) {
-        if ('vibrate' in navigator) {
-            navigator.vibrate(ms);
-        }
+        if ('vibrate' in navigator) navigator.vibrate(ms);
     }
 }
 
-// Start the app
 const app = new IronPump();
