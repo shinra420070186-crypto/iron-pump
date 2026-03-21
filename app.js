@@ -205,7 +205,7 @@ class IronPump {
     startWorkout(dayId){
         const day=PROGRAM.find(d=>d.id===dayId);if(!day)return;
         this.workout={dayId,dayName:day.name,dayLabel:day.label,splitName:day.name+' — '+day.label,
-            exercises:day.exercises.map(ex=>({name:ex.name,muscle:ex.muscle,rec:ex.rec,sets:[],skipped:false,completed:false})),
+            exercises:day.exercises.map(ex=>({name:ex.name,muscle:ex.muscle,rec:ex.rec,sets:[{weight:'',reps:''}],currentSetIndex:0,skipped:false,completed:false})),
             startTime:new Date().toISOString(),totalVolume:0,totalSets:0};
         this.exIndex=0;this.startTime=Date.now();this.startTimer();
         document.getElementById('woInactive').classList.add('hidden');
@@ -234,61 +234,161 @@ class IronPump {
         const c=document.getElementById('exContainer'),wo=this.workout;
         if(this.exIndex>=wo.exercises.length){this.finishWorkout();return}
         const ex=wo.exercises[this.exIndex],num=this.exIndex+1,total=wo.exercises.length;
-        const hasData=ex.sets.some(s=>parseFloat(s.weight)>0&&parseFloat(s.reps)>0);
 
-        let setsHtml='';
-        if(ex.sets.length===0)setsHtml='<div class="no-sets">Tap "Add Set" to begin logging</div>';
-        else setsHtml=ex.sets.map((set,si)=>{
-            const filled=parseFloat(set.weight)>0&&parseFloat(set.reps)>0;
-            return `<div class="set-row ${filled?'filled':''}" style="animation:popIn .3s cubic-bezier(.34,1.56,.64,1) ${si*.05}s both">
-                <span class="set-num">${si+1}</span>
-                <input type="number" class="set-input" placeholder="kg" value="${set.weight}" data-si="${si}" data-field="weight" inputmode="decimal">
-                <input type="number" class="set-input" placeholder="reps" value="${set.reps}" data-si="${si}" data-field="reps" inputmode="numeric">
-                <button class="set-del" data-si="${si}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>`;
-        }).join('');
+        // current set index = number of completed sets so far
+        if(ex.currentSetIndex===undefined)ex.currentSetIndex=0;
+        const si=ex.currentSetIndex;
+        const set=ex.sets[si]||{weight:'',reps:''};
+        if(!ex.sets[si])ex.sets[si]=set;
 
-        let skipHtml=!hasData?
-            `<button class="action-btn btn-skip-ex" id="skipBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg>Skip Exercise</button>`:
-            `<button class="action-btn btn-skip-set" id="skipBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg>Skip Remaining Sets</button>`;
+        const hasData=parseFloat(set.weight)>0&&parseFloat(set.reps)>0;
+        const hasPrevSets=ex.sets.slice(0,si).some(s=>parseFloat(s.weight)>0&&parseFloat(s.reps)>0);
+        const canFinish=si>0||hasData;
+
+        // per-set PR
+        const prData=this.getSetPR(ex.name,si);
+        const prHtml=`<div class="pr-ref-card" id="prBanner">
+            <div class="pr-ref-left"><span class="pr-ref-label">SET ${si+1} BEST</span>
+            <div class="pr-ref-values">
+                <div class="pr-ref-box" id="prBannerVal">${prData?prData.weight:'—'}</div>
+                <span class="pr-ref-x">×</span>
+                <div class="pr-ref-box" id="prBannerReps">${prData?prData.reps:'—'}</div>
+            </div></div>
+            <span class="pr-ref-right" id="prBannerRight">${prData?'prev best':'first time'}</span>
+        </div>`;
+
+        const setHtml=`<div class="set-glass-card" id="activeSetCard">
+            <div class="set-glass-top">
+                <span class="set-glass-num">SET ${si+1}</span>
+                ${si>0?`<span class="set-glass-done">${si} done</span>`:''}
+            </div>
+            <div class="set-glass-inputs">
+                <div class="set-glass-field">
+                    <input type="number" class="set-glass-input" id="setWeight" placeholder="0" value="${set.weight}" inputmode="decimal" autocomplete="off">
+                    <span class="set-glass-unit">kg</span>
+                </div>
+                <div class="set-glass-divider"></div>
+                <div class="set-glass-field">
+                    <input type="number" class="set-glass-input" id="setReps" placeholder="0" value="${set.reps}" inputmode="numeric" autocomplete="off">
+                    <span class="set-glass-unit">reps</span>
+                </div>
+            </div>
+        </div>`;
 
         c.innerHTML=`<div class="ex-active-card"><div class="ex-top-bar"></div>
             <div class="ex-progress-section"><div class="ex-progress-bar"><div class="ex-progress-fill" style="width:${(num/total)*100}%"></div></div><div class="ex-counter">EXERCISE ${num} OF ${total}</div></div>
-            <div class="ex-body"><div class="ex-title-section"><h3 class="ex-title">${ex.name}</h3><span class="ex-muscle">${ex.muscle}</span><span class="ex-rec">${ex.rec}</span></div>
-            <div class="pr-banner" id="prBanner"><div class="pr-banner-left"><span class="pr-banner-icon">🏅</span><div><div class="pr-banner-label">Best Set</div><div class="pr-banner-val" id="prBannerVal">—</div></div></div><span class="pr-banner-right" id="prBannerRight"></span></div>
-            <div class="sets-list">${setsHtml}</div>
-            <div class="ex-actions">
-                <button class="action-btn btn-add" id="addSetBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add Set</button>
-                ${skipHtml}
-                ${hasData?`<button class="action-btn btn-finish-ex" id="finishExBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Finish Exercise</button>`:''}
-            </div></div></div>`;
+            <div class="ex-body">
+                <div class="ex-title-section"><h3 class="ex-title">${ex.name}</h3><span class="ex-muscle">${ex.muscle}</span><span class="ex-rec">${ex.rec}</span></div>
+                ${prHtml}
+                ${setHtml}
+                <div class="ex-actions">
+                    <button class="action-btn btn-add" id="addSetBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Next Set</button>
+                    ${canFinish?`<button class="action-btn btn-finish-ex" id="finishExBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Finish Exercise</button>`:''}
+                    <button class="action-btn btn-skip-ex" id="skipBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg>${canFinish?'Skip Remaining':'Skip Exercise'}</button>
+                </div>
+            </div></div>`;
 
-        const syncInputs=()=>{
-            c.querySelectorAll('.set-input').forEach(inp=>{
-                const si=parseInt(inp.dataset.si);
-                if(ex.sets[si])ex.sets[si][inp.dataset.field]=inp.value;
-            });
+        const syncCurrent=()=>{
+            const w=document.getElementById('setWeight');
+            const r=document.getElementById('setReps');
+            if(w)ex.sets[si].weight=w.value;
+            if(r)ex.sets[si].reps=r.value;
         };
-        document.getElementById('addSetBtn').addEventListener('click',()=>{syncInputs();ex.sets.push({weight:'',reps:''});this.renderEx();this.sound.play('add');this.vib(10)});
-        document.getElementById('skipBtn').addEventListener('click',()=>{
-            syncInputs();
-            if(!hasData){ex.skipped=true;ex.completed=true}else{ex.completed=true}
-            this.exIndex++;this.updateHeader();this.updateLive();this.renderEx();
-            this.sound.play('skip');this.vib(15);if(hasData)this.startRestTimer();
+
+        // live input update
+        ['setWeight','setReps'].forEach(id=>{
+            const el=document.getElementById(id);
+            if(!el)return;
+            el.addEventListener('input',()=>{
+                syncCurrent();
+                this.updateLive();
+                this.updatePRBannerForSet(ex,si);
+            });
+            el.addEventListener('focus',()=>el.select());
         });
+
+        // Next Set button — save current, animate out, show next
+        document.getElementById('addSetBtn').addEventListener('click',()=>{
+            syncCurrent();
+            const card=document.getElementById('activeSetCard');
+            if(card){card.style.transition='all .35s cubic-bezier(.4,0,.2,1)';card.style.opacity='0';card.style.transform='translateX(-60px) scale(.95)'}
+            setTimeout(()=>{
+                ex.currentSetIndex=si+1;
+                if(!ex.sets[si+1])ex.sets[si+1]={weight:'',reps:''};
+                this.updateLive();this.renderEx();this.sound.play('add');this.vib(10);
+            },320);
+        });
+
+        // Finish Exercise button
+        const fb=document.getElementById('finishExBtn');
         if(fb)fb.addEventListener('click',()=>{
-            syncInputs();
-            ex.completed=true;this.exIndex++;this.updateHeader();this.updateLive();
-            this.renderEx();this.sound.play('finish');this.vib(25);this.startRestTimer();
+            syncCurrent();
+            ex.completed=true;
+            // save per-set PRs
+            ex.sets.forEach((s,i)=>{
+                const w=parseFloat(s.weight),r=parseFloat(s.reps);
+                if(w>0&&r>0)this.saveSetPR(ex.name,i,w,r);
+            });
+            this.exIndex++;this.updateHeader();this.updateLive();
+            this.sound.play('finish');this.vib(25);this.startRestTimer();
+            const card=document.getElementById('activeSetCard');
+            if(card){card.style.transition='all .35s cubic-bezier(.4,0,.2,1)';card.style.opacity='0';card.style.transform='translateY(-30px) scale(.95)'}
+            setTimeout(()=>this.renderEx(),320);
         });
-        c.querySelectorAll('.set-input').forEach(inp=>{
-            inp.addEventListener('input',(e)=>{const si=parseInt(e.target.dataset.si);if(ex.sets[si]){ex.sets[si][e.target.dataset.field]=e.target.value;this.updateLive();this.updatePRBanner(ex)}});
-            inp.addEventListener('focus',()=>inp.select());
+
+        // Skip button
+        document.getElementById('skipBtn').addEventListener('click',()=>{
+            syncCurrent();
+            if(!canFinish){ex.skipped=true;ex.completed=true;}
+            else{
+                ex.completed=true;
+                ex.sets.forEach((s,i)=>{const w=parseFloat(s.weight),r=parseFloat(s.reps);if(w>0&&r>0)this.saveSetPR(ex.name,i,w,r);});
+            }
+            this.exIndex++;this.updateHeader();this.updateLive();
+            this.sound.play('skip');this.vib(15);
+            if(canFinish)this.startRestTimer();
+            setTimeout(()=>this.renderEx(),320);
         });
-        // init PR banner
-        this.updatePRBanner(ex);
-        c.querySelectorAll('.set-del').forEach(btn=>{
-            btn.addEventListener('click',()=>{syncInputs();ex.sets.splice(parseInt(btn.dataset.si),1);this.renderEx();this.updateLive();this.sound.play('delete');this.vib(10)});
-        });
+
+        // animate card in
+        const newCard=document.getElementById('activeSetCard');
+        if(newCard){newCard.style.opacity='0';newCard.style.transform='translateX(60px) scale(.95)';
+            requestAnimationFrame(()=>{newCard.style.transition='all .4s cubic-bezier(.34,1.2,.64,1)';newCard.style.opacity='1';newCard.style.transform='translateX(0) scale(1)'});
+        }
+
+        this.updatePRBannerForSet(ex,si);
+    }
+
+    updatePRBannerForSet(ex,si){
+        const banner=document.getElementById('prBanner');if(!banner)return;
+        const valEl=document.getElementById('prBannerVal');
+        const repsEl=document.getElementById('prBannerReps');
+        const rightEl=document.getElementById('prBannerRight');
+        if(!valEl||!repsEl)return;
+
+        const cur=ex.sets[si]||{};
+        const curW=parseFloat(cur.weight)||0;
+        const curR=parseFloat(cur.reps)||0;
+        const prev=this.getSetPR(ex.name,si);
+
+        if(!prev){
+            valEl.textContent=curW||'—';
+            repsEl.textContent=curR||'—';
+            rightEl.textContent='first time';
+            banner.classList.remove('pr-new');
+            return;
+        }
+
+        const isNew=curW>0&&curR>0&&(curW>prev.weight||(curW===prev.weight&&curR>prev.reps));
+        if(isNew){
+            valEl.textContent=curW;repsEl.textContent=curR;
+            rightEl.textContent='🏆 NEW PR!';
+            banner.classList.add('pr-new');
+        } else {
+            valEl.textContent=prev.weight;repsEl.textContent=prev.reps;
+            rightEl.textContent='prev best';
+            banner.classList.remove('pr-new');
+        }
     }
 
     updateLive(){
@@ -302,58 +402,24 @@ class IronPump {
         this.workout.totalVolume=vol;this.workout.totalSets=sets;
     }
 
-    // ─── PR System ───
-    getPR(exName){
-        return this.prRecords[exName]||null;
+    // ─── PR System (per-set) ───
+    getSetPR(exName,setIndex){
+        const key=exName+'__set'+setIndex;
+        return this.prRecords[key]||null;
     }
 
-    savePR(exName,weight,reps){
-        this.prRecords[exName]={weight,reps,date:new Date().toISOString()};
-        localStorage.setItem('ip_prs',JSON.stringify(this.prRecords));
-    }
-
-    updatePRBanner(ex){
-        const banner=document.getElementById('prBanner');if(!banner)return;
-        const valEl=document.getElementById('prBannerVal');const rightEl=document.getElementById('prBannerRight');
-        if(!valEl||!rightEl)return;
-
-        // find best set in current exercise
-        let bestW=0,bestR=0;
-        ex.sets.forEach(s=>{const w=parseFloat(s.weight),r=parseFloat(s.reps);if(w>0&&r>0&&w>bestW){bestW=w;bestR=r}});
-
-        const prev=this.getPR(ex.name);
-
-        if(!prev){
-            // no history yet
-            if(bestW>0){
-                valEl.textContent=bestW+' kg × '+bestR+' reps';
-                rightEl.textContent='First time!';
-                banner.classList.remove('pr-new');
-            } else {
-                valEl.textContent='No data yet';
-                rightEl.textContent='';
-            }
-            return;
-        }
-
-        // show stored best
-        const isNewPR=bestW>0&&(bestW>prev.weight||(bestW===prev.weight&&bestR>prev.reps));
-
-        if(isNewPR){
-            // new PR achieved this session
-            const old=valEl.textContent;
-            valEl.textContent=bestW+' kg × '+bestR+' reps';
-            rightEl.textContent='🏆 NEW PR!';
-            if(valEl.textContent!==old){valEl.classList.remove('bump');void valEl.offsetWidth;valEl.classList.add('bump')}
-            banner.classList.add('pr-new');
-            this.savePR(ex.name,bestW,bestR);
-            this.sound.play('pr');this.vib(20);
-        } else {
-            valEl.textContent=prev.weight+' kg × '+prev.reps+' reps';
-            rightEl.textContent='Best ever';
-            banner.classList.remove('pr-new');
+    saveSetPR(exName,setIndex,weight,reps){
+        const key=exName+'__set'+setIndex;
+        const prev=this.prRecords[key];
+        if(!prev||weight>prev.weight||(weight===prev.weight&&reps>prev.reps)){
+            this.prRecords[key]={weight,reps,date:new Date().toISOString()};
+            localStorage.setItem('ip_prs',JSON.stringify(this.prRecords));
         }
     }
+
+    // kept for backward compat
+    getPR(exName){return this.prRecords[exName]||null;}
+    savePR(exName,weight,reps){this.prRecords[exName]={weight,reps,date:new Date().toISOString()};localStorage.setItem('ip_prs',JSON.stringify(this.prRecords));}
 
     // ─── Rest Timer ───
     setupRest(){
