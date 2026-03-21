@@ -262,13 +262,21 @@ class IronPump {
                 ${hasData?`<button class="action-btn btn-finish-ex" id="finishExBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Finish Exercise</button>`:''}
             </div></div></div>`;
 
-        document.getElementById('addSetBtn').addEventListener('click',()=>{ex.sets.push({weight:'',reps:''});this.renderEx();this.sound.play('add');this.vib(10)});
+        const syncInputs=()=>{
+            c.querySelectorAll('.set-input').forEach(inp=>{
+                const si=parseInt(inp.dataset.si);
+                if(ex.sets[si])ex.sets[si][inp.dataset.field]=inp.value;
+            });
+        };
+        document.getElementById('addSetBtn').addEventListener('click',()=>{syncInputs();ex.sets.push({weight:'',reps:''});this.renderEx();this.sound.play('add');this.vib(10)});
         document.getElementById('skipBtn').addEventListener('click',()=>{
+            syncInputs();
             if(!hasData){ex.skipped=true;ex.completed=true}else{ex.completed=true}
             this.exIndex++;this.updateHeader();this.updateLive();this.renderEx();
             this.sound.play('skip');this.vib(15);if(hasData)this.startRestTimer();
         });
         if(fb)fb.addEventListener('click',()=>{
+            syncInputs();
             ex.completed=true;this.exIndex++;this.updateHeader();this.updateLive();
             this.renderEx();this.sound.play('finish');this.vib(25);this.startRestTimer();
         });
@@ -279,7 +287,7 @@ class IronPump {
         // init PR banner
         this.updatePRBanner(ex);
         c.querySelectorAll('.set-del').forEach(btn=>{
-            btn.addEventListener('click',()=>{ex.sets.splice(parseInt(btn.dataset.si),1);this.renderEx();this.updateLive();this.sound.play('delete');this.vib(10)});
+            btn.addEventListener('click',()=>{syncInputs();ex.sets.splice(parseInt(btn.dataset.si),1);this.renderEx();this.updateLive();this.sound.play('delete');this.vib(10)});
         });
     }
 
