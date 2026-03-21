@@ -273,8 +273,7 @@ class IronPump {
             this.renderEx();this.sound.play('finish');this.vib(25);this.startRestTimer();
         });
         c.querySelectorAll('.set-input').forEach(inp=>{
-            inp.addEventListener('change',(e)=>{ex.sets[parseInt(e.target.dataset.si)][e.target.dataset.field]=e.target.value;this.updateLive();this.renderEx()});
-            inp.addEventListener('input',(e)=>{if(ex.sets[parseInt(e.target.dataset.si)]){ex.sets[parseInt(e.target.dataset.si)][e.target.dataset.field]=e.target.value;this.updatePRBanner(ex)}});
+            inp.addEventListener('input',(e)=>{const si=parseInt(e.target.dataset.si);if(ex.sets[si]){ex.sets[si][e.target.dataset.field]=e.target.value;this.updateLive();this.updatePRBanner(ex)}});
             inp.addEventListener('focus',()=>inp.select());
         });
         // init PR banner
