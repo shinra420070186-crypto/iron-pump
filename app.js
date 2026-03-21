@@ -184,7 +184,21 @@ class IronPump {
                 <div class="day-left"><span class="day-num">${d.name}</span><span class="day-sub">${d.label}</span><span class="day-count">${d.exercises.length} exercises</span></div>
                 <svg class="day-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
             </div>`).join('');
-        grid.addEventListener('click',(e)=>{const c=e.target.closest('.day-card');if(c)this.startWorkout(c.dataset.day)});
+        grid.addEventListener('click',(e)=>{
+            const c=e.target.closest('.day-card');
+            if(c){
+                // water ripple
+                const r=c.getBoundingClientRect();
+                const rip=document.createElement('span');
+                const sz=Math.max(r.width,r.height)*1.4;
+                const cx=(e.clientX||e.touches?.[0]?.clientX||r.left+r.width/2)-r.left;
+                const cy=(e.clientY||e.touches?.[0]?.clientY||r.top+r.height/2)-r.top;
+                rip.className='water-ripple';
+                rip.style.cssText=`width:${sz}px;height:${sz}px;left:${cx-sz/2}px;top:${cy-sz/2}px`;
+                c.appendChild(rip);setTimeout(()=>rip.remove(),900);
+                this.startWorkout(c.dataset.day);
+            }
+        });
     }
 
     // ─── Start Workout ───
@@ -240,6 +254,7 @@ class IronPump {
         c.innerHTML=`<div class="ex-active-card"><div class="ex-top-bar"></div>
             <div class="ex-progress-section"><div class="ex-progress-bar"><div class="ex-progress-fill" style="width:${(num/total)*100}%"></div></div><div class="ex-counter">EXERCISE ${num} OF ${total}</div></div>
             <div class="ex-body"><div class="ex-title-section"><h3 class="ex-title">${ex.name}</h3><span class="ex-muscle">${ex.muscle}</span><span class="ex-rec">${ex.rec}</span></div>
+            <div class="pr-banner" id="prBanner"><div class="pr-banner-left"><span class="pr-banner-icon">🏅</span><div><div class="pr-banner-label">Best Set</div><div class="pr-banner-val" id="prBannerVal">—</div></div></div><span class="pr-banner-right" id="prBannerRight"></span></div>
             <div class="sets-list">${setsHtml}</div>
             <div class="ex-actions">
                 <button class="action-btn btn-add" id="addSetBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add Set</button>
@@ -253,15 +268,17 @@ class IronPump {
             this.exIndex++;this.updateHeader();this.updateLive();this.renderEx();
             this.sound.play('skip');this.vib(15);if(hasData)this.startRestTimer();
         });
-        const fb=document.getElementById('finishExBtn');
         if(fb)fb.addEventListener('click',()=>{
-            ex.completed=true;this.checkPR(ex);this.exIndex++;this.updateHeader();this.updateLive();
+            ex.completed=true;this.exIndex++;this.updateHeader();this.updateLive();
             this.renderEx();this.sound.play('finish');this.vib(25);this.startRestTimer();
         });
         c.querySelectorAll('.set-input').forEach(inp=>{
             inp.addEventListener('change',(e)=>{ex.sets[parseInt(e.target.dataset.si)][e.target.dataset.field]=e.target.value;this.updateLive();this.renderEx()});
+            inp.addEventListener('input',(e)=>{if(ex.sets[parseInt(e.target.dataset.si)]){ex.sets[parseInt(e.target.dataset.si)][e.target.dataset.field]=e.target.value;this.updatePRBanner(ex)}});
             inp.addEventListener('focus',()=>inp.select());
         });
+        // init PR banner
+        this.updatePRBanner(ex);
         c.querySelectorAll('.set-del').forEach(btn=>{
             btn.addEventListener('click',()=>{ex.sets.splice(parseInt(btn.dataset.si),1);this.renderEx();this.updateLive();this.sound.play('delete');this.vib(10)});
         });
@@ -278,34 +295,57 @@ class IronPump {
         this.workout.totalVolume=vol;this.workout.totalSets=sets;
     }
 
-    // ─── PR Detection ───
-    checkPR(ex){
-        let bestWeight=0,bestVol=0;
-        ex.sets.forEach(s=>{
-            const w=parseFloat(s.weight),r=parseFloat(s.reps);
-            if(w>0&&r>0){if(w>bestWeight)bestWeight=w;bestVol+=w*r}
-        });
-        if(bestWeight===0)return;
-
-        const key=ex.name;const prev=this.prRecords[key];
-        let isPR=false;
-        if(!prev){isPR=true;this.prRecords[key]={weight:bestWeight,volume:bestVol,date:new Date().toISOString()}}
-        else{
-            if(bestWeight>prev.weight){isPR=true;prev.weight=bestWeight;prev.date=new Date().toISOString()}
-            if(bestVol>prev.volume){isPR=true;prev.volume=bestVol;prev.date=new Date().toISOString()}
-        }
-
-        if(isPR){
-            localStorage.setItem('ip_prs',JSON.stringify(this.prRecords));
-            this.showPRToast(ex.name);this.sound.play('pr');
-        }
+    // ─── PR System ───
+    getPR(exName){
+        return this.prRecords[exName]||null;
     }
 
-    showPRToast(name){
-        const toast=document.getElementById('prToast');
-        toast.textContent='🏆 NEW PR — '+name+'!';
-        toast.classList.add('show');toast.classList.remove('hide');
-        setTimeout(()=>{toast.classList.remove('show');toast.classList.add('hide')},3000);
+    savePR(exName,weight,reps){
+        this.prRecords[exName]={weight,reps,date:new Date().toISOString()};
+        localStorage.setItem('ip_prs',JSON.stringify(this.prRecords));
+    }
+
+    updatePRBanner(ex){
+        const banner=document.getElementById('prBanner');if(!banner)return;
+        const valEl=document.getElementById('prBannerVal');const rightEl=document.getElementById('prBannerRight');
+        if(!valEl||!rightEl)return;
+
+        // find best set in current exercise
+        let bestW=0,bestR=0;
+        ex.sets.forEach(s=>{const w=parseFloat(s.weight),r=parseFloat(s.reps);if(w>0&&r>0&&w>bestW){bestW=w;bestR=r}});
+
+        const prev=this.getPR(ex.name);
+
+        if(!prev){
+            // no history yet
+            if(bestW>0){
+                valEl.textContent=bestW+' kg × '+bestR+' reps';
+                rightEl.textContent='First time!';
+                banner.classList.remove('pr-new');
+            } else {
+                valEl.textContent='No data yet';
+                rightEl.textContent='';
+            }
+            return;
+        }
+
+        // show stored best
+        const isNewPR=bestW>0&&(bestW>prev.weight||(bestW===prev.weight&&bestR>prev.reps));
+
+        if(isNewPR){
+            // new PR achieved this session
+            const old=valEl.textContent;
+            valEl.textContent=bestW+' kg × '+bestR+' reps';
+            rightEl.textContent='🏆 NEW PR!';
+            if(valEl.textContent!==old){valEl.classList.remove('bump');void valEl.offsetWidth;valEl.classList.add('bump')}
+            banner.classList.add('pr-new');
+            this.savePR(ex.name,bestW,bestR);
+            this.sound.play('pr');this.vib(20);
+        } else {
+            valEl.textContent=prev.weight+' kg × '+prev.reps+' reps';
+            rightEl.textContent='Best ever';
+            banner.classList.remove('pr-new');
+        }
     }
 
     // ─── Rest Timer ───
