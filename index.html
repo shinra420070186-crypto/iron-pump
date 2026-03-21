@@ -134,16 +134,31 @@
         .muscle-bar-fill.c3{background:var(--ggreen)}
         .muscle-bar-fill.c4{background:var(--gamber)}
 
-        /* PR Banner */
-        .pr-banner{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:rgba(255,170,0,.07);border:1px solid rgba(255,170,0,.25);border-radius:14px;margin-bottom:14px;transition:all .4s cubic-bezier(.34,1.56,.64,1);overflow:hidden}
-        .pr-banner.pr-new{background:rgba(255,170,0,.15);border-color:rgba(255,170,0,.6);box-shadow:0 0 20px rgba(255,170,0,.2);animation:prPulse .5s cubic-bezier(.34,1.56,.64,1)}
-        @keyframes prPulse{0%{transform:scale(1)}50%{transform:scale(1.025)}100%{transform:scale(1)}}
-        .pr-banner-left{display:flex;align-items:center;gap:8px}
-        .pr-banner-icon{font-size:1rem;line-height:1}
-        .pr-banner-label{font-size:.68rem;color:rgba(255,170,0,.7);font-weight:600;letter-spacing:.08em;text-transform:uppercase}
-        .pr-banner-val{font-family:var(--mono);font-size:.88rem;font-weight:700;color:var(--amber);transition:all .3s}
-        .pr-banner-val.bump{animation:valBump .35s ease}
-        .pr-banner-right{font-size:.65rem;color:var(--text4);font-family:var(--mono)}
+        /* PR Ref Card */
+        .pr-ref-card{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:linear-gradient(135deg,rgba(31,31,46,.9),rgba(18,18,26,.95));border:1px solid rgba(255,255,255,.07);border-radius:16px;margin-bottom:12px;backdrop-filter:blur(20px);box-shadow:inset 0 1px 0 rgba(255,255,255,.06)}
+        .pr-ref-card.pr-new{border-color:rgba(0,212,255,.3);box-shadow:0 0 20px rgba(0,212,255,.1),inset 0 1px 0 rgba(255,255,255,.06)}
+        .pr-ref-left{display:flex;flex-direction:column;gap:6px}
+        .pr-ref-label{font-size:.6rem;font-weight:600;letter-spacing:.12em;color:var(--text4);text-transform:uppercase}
+        .pr-ref-values{display:flex;align-items:center;gap:8px}
+        .pr-ref-box{min-width:52px;padding:6px 10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;font-family:var(--mono);font-size:.95rem;font-weight:700;color:var(--text2);text-align:center}
+        .pr-ref-x{font-size:.75rem;color:var(--text4);font-family:var(--mono)}
+        .pr-ref-right{font-size:.65rem;color:var(--text4);font-family:var(--mono)}
+        .pr-ref-card.pr-new .pr-ref-right{color:var(--cyan)}
+        .pr-ref-card.pr-new .pr-ref-box{color:var(--cyan);border-color:rgba(0,212,255,.2)}
+
+        /* Set Glass Card */
+        .set-glass-card{position:relative;background:linear-gradient(135deg,rgba(31,31,46,.88) 0%,rgba(18,18,26,.94) 100%);border:1px solid rgba(255,255,255,.09);border-radius:20px;padding:20px;margin-bottom:16px;backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);box-shadow:0 0 24px rgba(0,212,255,.1),0 0 8px rgba(0,212,255,.06),inset 0 1px 0 rgba(255,255,255,.08);overflow:hidden}
+        .set-glass-card::before{content:'';position:absolute;top:-30%;left:-10%;width:60%;height:70%;background:radial-gradient(ellipse,rgba(0,212,255,.06) 0%,transparent 70%);border-radius:50%;pointer-events:none}
+        .set-glass-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+        .set-glass-num{font-family:var(--mono);font-size:.72rem;font-weight:700;letter-spacing:.15em;color:var(--cyan);text-transform:uppercase}
+        .set-glass-done{font-size:.65rem;color:var(--text4);font-family:var(--mono)}
+        .set-glass-inputs{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px}
+        .set-glass-field{display:flex;flex-direction:column;align-items:center;gap:6px}
+        .set-glass-input{width:100%;padding:18px 10px;background:rgba(255,255,255,.04);border:1.5px solid rgba(255,255,255,.1);border-radius:14px;color:var(--text1);font-family:var(--mono);font-size:2rem;font-weight:700;text-align:center;transition:all .25s;-webkit-appearance:none}
+        .set-glass-input:focus{outline:none;border-color:var(--cyan);box-shadow:0 0 0 3px rgba(0,212,255,.1),0 0 20px rgba(0,212,255,.12);background:rgba(0,212,255,.04);color:var(--cyan)}
+        .set-glass-input::placeholder{color:rgba(255,255,255,.15);font-size:1.8rem}
+        .set-glass-unit{font-size:.7rem;color:var(--text4);font-family:var(--mono);letter-spacing:.1em;text-transform:uppercase}
+        .set-glass-divider{width:1px;height:60px;background:linear-gradient(to bottom,transparent,rgba(255,255,255,.1),transparent)}
 
         /* Day Card Glow + Glass Edge */
         .day-card{box-shadow:0 0 18px rgba(0,212,255,.12),0 0 6px rgba(0,212,255,.08),inset 0 1px 0 rgba(255,255,255,.08)}
