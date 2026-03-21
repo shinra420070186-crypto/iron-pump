@@ -134,10 +134,22 @@
         .muscle-bar-fill.c3{background:var(--ggreen)}
         .muscle-bar-fill.c4{background:var(--gamber)}
 
-        /* PR Notification */
-        .pr-toast{position:fixed;top:80px;left:50%;transform:translateX(-50%) translateY(-100px);background:var(--gamber);color:var(--void);padding:12px 24px;border-radius:999px;font-weight:700;font-size:.88rem;z-index:300;transition:transform .5s cubic-bezier(.34,1.56,.64,1);box-shadow:0 0 40px rgba(255,170,0,.5);pointer-events:none}
-        .pr-toast.show{transform:translateX(-50%) translateY(0)}
-        .pr-toast.hide{transform:translateX(-50%) translateY(-100px)}
+        /* PR Banner */
+        .pr-banner{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:rgba(255,170,0,.07);border:1px solid rgba(255,170,0,.25);border-radius:14px;margin-bottom:14px;transition:all .4s cubic-bezier(.34,1.56,.64,1);overflow:hidden}
+        .pr-banner.pr-new{background:rgba(255,170,0,.15);border-color:rgba(255,170,0,.6);box-shadow:0 0 20px rgba(255,170,0,.2);animation:prPulse .5s cubic-bezier(.34,1.56,.64,1)}
+        @keyframes prPulse{0%{transform:scale(1)}50%{transform:scale(1.025)}100%{transform:scale(1)}}
+        .pr-banner-left{display:flex;align-items:center;gap:8px}
+        .pr-banner-icon{font-size:1rem;line-height:1}
+        .pr-banner-label{font-size:.68rem;color:rgba(255,170,0,.7);font-weight:600;letter-spacing:.08em;text-transform:uppercase}
+        .pr-banner-val{font-family:var(--mono);font-size:.88rem;font-weight:700;color:var(--amber);transition:all .3s}
+        .pr-banner-val.bump{animation:valBump .35s ease}
+        .pr-banner-right{font-size:.65rem;color:var(--text4);font-family:var(--mono)}
+
+        /* Day Card Glow */
+        .day-card::before{content:'';position:absolute;inset:0;border-radius:18px;padding:1px;background:linear-gradient(135deg,rgba(0,212,255,.35),rgba(0,102,255,.15),rgba(0,212,255,.05));-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask-composite:exclude;opacity:.7;transition:opacity .4s}
+        .day-card:hover::before,.day-card:active::before{opacity:1}
+        .water-ripple{position:absolute;border-radius:50%;background:radial-gradient(circle,rgba(0,212,255,.35) 0%,rgba(0,212,255,.12) 40%,transparent 70%);transform:scale(0);pointer-events:none;animation:waterRipple .9s cubic-bezier(.2,.8,.4,1) forwards}
+        @keyframes waterRipple{0%{transform:scale(0);opacity:.9}60%{opacity:.4}100%{transform:scale(3.5);opacity:0}}
 
         /* Body Weight */
         .bw-input-card{background:var(--glass);border:1px solid var(--border);border-radius:16px;padding:18px;margin-bottom:20px;backdrop-filter:blur(20px);display:flex;align-items:center;gap:12px}
@@ -372,9 +384,6 @@
             <button class="bnav" data-page="settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg><span>Settings</span></button>
         </nav>
     </div>
-
-    <!-- PR Toast -->
-    <div class="pr-toast" id="prToast">🏆 NEW PR!</div>
 
     <!-- Rest Timer -->
     <div class="rest-overlay hidden" id="restOverlay"><div class="rest-content"><p class="rest-label">Rest Timer</p><div class="rest-ring"><svg viewBox="0 0 200 200"><circle cx="100" cy="100" r="90" class="rest-ring-bg"/><circle cx="100" cy="100" r="90" class="rest-ring-fill" id="restRingFill"/></svg><span class="rest-time" id="restTime">2:00</span></div><div class="rest-controls"><button class="rest-btn rest-skip" id="restSkip">Skip</button><button class="rest-btn rest-add" id="restAdd30">+30s</button></div></div></div>
