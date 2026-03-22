@@ -281,37 +281,56 @@
         .bw-change.up{color:var(--red)}.bw-change.down{color:var(--green)}.bw-change.same{color:var(--text4)}
 
         /* History */
-        .history-list{display:flex;flex-direction:column;gap:10px}
-        .history-card{padding:16px;background:var(--glass);border:1px solid var(--border);border-radius:16px;backdrop-filter:blur(20px);transition:border-color .2s}
-        .history-card:active{border-color:var(--cyan)}
-        .history-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;cursor:pointer}
-        .history-split{font-size:.88rem;font-weight:600;display:block;margin-bottom:2px}
+        .history-list{display:flex;flex-direction:column;gap:12px}
+        .history-card{padding:16px;background:linear-gradient(135deg,rgba(31,31,46,.88) 0%,rgba(18,18,26,.94) 100%);border:1px solid rgba(255,255,255,.09);border-radius:16px;backdrop-filter:blur(20px);box-shadow:inset 0 1px 0 rgba(255,255,255,.07);transition:opacity .2s}
+        .history-card:active{opacity:.85}
+        .history-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;cursor:pointer}
+        .history-split{font-size:.9rem;font-weight:600;display:block;margin-bottom:3px}
         .history-date{font-size:.72rem;color:var(--text3)}
-        .history-stats{display:flex;gap:16px;margin-bottom:0}
-        .history-stat{font-size:.75rem;color:var(--text3)}
-        .history-stat span{font-family:var(--mono);font-weight:600;color:var(--text2)}
+        .history-stats{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:0}
+        .hist-stat-pill{display:flex;align-items:center;gap:5px;padding:5px 10px;background:rgba(255,255,255,.05);border-radius:999px;font-size:.75rem;font-family:var(--mono);font-weight:600;color:var(--text2);border:1px solid rgba(255,255,255,.07)}
+        .hist-stat-icon{font-size:.7rem}
         .hist-chevron{width:16px;height:16px;color:var(--text4);transition:transform .3s ease;flex-shrink:0}
         .history-card.expanded .hist-chevron{transform:rotate(180deg)}
-        .hist-details{max-height:0;overflow:hidden;transition:max-height .35s ease,opacity .35s ease;opacity:0}
-        .history-card.expanded .hist-details{max-height:600px;opacity:1;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
-        .hist-ex-row{display:flex;flex-direction:column;gap:2px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04)}
+        .hist-details{max-height:0;overflow:hidden;transition:max-height .4s ease,opacity .4s ease;opacity:0}
+        .history-card.expanded .hist-details{max-height:600px;opacity:1;margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,.06)}
+        .hist-ex-row{display:flex;flex-direction:column;gap:3px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04)}
         .hist-ex-row:last-child{border-bottom:none}
         .hist-ex-name{font-size:.82rem;font-weight:600;color:var(--text2)}
         .hist-ex-sets{font-size:.72rem;color:var(--text3);font-family:var(--mono)}
         .no-history{text-align:center;padding:50px 20px;color:var(--text3)}
 
         /* Progress Page */
-        .pr-ex-card{background:var(--glass);border:1px solid var(--border);border-radius:16px;padding:18px;margin-bottom:14px;backdrop-filter:blur(20px)}
-        .pr-ex-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px}
+        .pr-ex-card{background:linear-gradient(135deg,rgba(31,31,46,.88) 0%,rgba(18,18,26,.94) 100%);border:1px solid rgba(255,255,255,.09);border-radius:16px;padding:18px;margin-bottom:14px;backdrop-filter:blur(20px);box-shadow:inset 0 1px 0 rgba(255,255,255,.07);transition:opacity .2s}
+        .pr-ex-card:active{opacity:.85}
+        .pr-ex-header{display:flex;justify-content:space-between;align-items:center;cursor:pointer}
+        .pr-ex-header-left{flex:1}
         .pr-ex-name{font-size:.95rem;font-weight:700;display:block;margin-bottom:4px}
         .pr-ex-1rm{font-size:.75rem;color:var(--cyan);font-family:var(--mono);font-weight:600}
-        .pr-ex-badge{font-size:1.2rem}
-        .pr-sets-list{display:flex;flex-direction:column;gap:8px}
-        .pr-set-row{display:grid;grid-template-columns:48px 1fr 80px 64px;align-items:center;gap:8px;padding:10px 12px;background:var(--panel);border-radius:12px}
-        .pr-set-num{font-family:var(--mono);font-size:.7rem;color:var(--text4);font-weight:600}
-        .pr-set-val{font-family:var(--mono);font-size:.88rem;font-weight:700;color:var(--text1)}
-        .pr-set-1rm{font-family:var(--mono);font-size:.72rem;color:var(--cyan)}
-        .pr-set-date{font-size:.65rem;color:var(--text3);text-align:right}
+        .pr-ex-badge-wrap{display:flex;flex-direction:column;align-items:center;gap:4px}
+        .pr-ex-badge{font-size:1.4rem}
+        .pr-ex-sets-count{font-size:.6rem;color:var(--text4);font-family:var(--mono)}
+        .pr-chevron{width:16px;height:16px;color:var(--text4);transition:transform .3s ease;flex-shrink:0;margin-left:8px}
+        .pr-ex-card.expanded .pr-chevron{transform:rotate(180deg)}
+        .pr-sets-list{max-height:0;overflow:hidden;transition:max-height .4s ease,opacity .4s ease;opacity:0;display:flex;flex-direction:column;gap:8px}
+        .pr-ex-card.expanded .pr-sets-list{max-height:600px;opacity:1;margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,.06)}
+        .pr-set-row{display:grid;grid-template-columns:28px 1fr 64px 56px;align-items:center;gap:8px;padding:10px 12px;background:rgba(255,255,255,.04);border-radius:12px;border-left:2px solid var(--cyan)}
+        .pr-set-num{font-family:var(--mono);font-size:.7rem;color:var(--cyan);font-weight:700}
+        .pr-set-val{font-family:var(--mono);font-size:.85rem;font-weight:700;color:var(--text1)}
+        .pr-set-1rm{font-family:var(--mono);font-size:.72rem;color:var(--green)}
+        .pr-set-date{font-size:.62rem;color:var(--text3);text-align:right}
+
+        /* Custom Confirm Dialog */
+        .confirm-overlay{position:fixed;inset:0;background:rgba(10,10,15,.7);z-index:300;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px);animation:fadeUp .2s ease;padding:20px}
+        .confirm-overlay.hidden{display:none}
+        .confirm-box{background:linear-gradient(135deg,rgba(31,31,46,.98) 0%,rgba(18,18,26,.99) 100%);border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:28px 24px;width:100%;max-width:320px;box-shadow:0 20px 60px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.08);animation:popIn .25s ease}
+        .confirm-title{font-size:1.1rem;font-weight:700;margin-bottom:8px;text-align:center}
+        .confirm-msg{font-size:.85rem;color:var(--text3);text-align:center;margin-bottom:24px;line-height:1.5}
+        .confirm-btns{display:flex;gap:10px}
+        .confirm-cancel{flex:1;padding:13px;background:var(--panel);border:1px solid var(--border);border-radius:12px;color:var(--text2);font-family:var(--font);font-size:.88rem;font-weight:600;cursor:pointer;transition:opacity .2s}
+        .confirm-cancel:active{opacity:.7}
+        .confirm-ok{flex:1;padding:13px;background:var(--ggreen);border:0;border-radius:12px;color:var(--void);font-family:var(--font);font-size:.88rem;font-weight:700;cursor:pointer;transition:opacity .2s;box-shadow:0 0 20px rgba(0,255,136,.2)}
+        .confirm-ok:active{opacity:.7}
 
         /* Settings */
         .settings-card{background:var(--glass);border:1px solid var(--border);border-radius:16px;padding:18px;margin-bottom:14px;backdrop-filter:blur(20px)}
@@ -442,6 +461,18 @@
 
     <!-- Workout Complete -->
     <div class="complete-overlay hidden" id="completeOverlay"><div class="complete-content"><div class="complete-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div><h2>Workout Complete!</h2><p>Great session. Keep pushing.</p><div class="complete-stats"><div class="complete-stat"><span class="complete-stat-val" id="compVol">0</span><span class="complete-stat-lbl">Volume (kg)</span></div><div class="complete-stat"><span class="complete-stat-val" id="compSets">0</span><span class="complete-stat-lbl">Sets</span></div><div class="complete-stat"><span class="complete-stat-val" id="compTime">0</span><span class="complete-stat-lbl">Minutes</span></div></div><button class="complete-close" id="compClose">Done</button></div></div>
+
+    <!-- Custom Confirm Dialog -->
+    <div class="confirm-overlay hidden" id="confirmOverlay">
+        <div class="confirm-box">
+            <p class="confirm-title">End Workout</p>
+            <p class="confirm-msg">Save your progress and end this session?</p>
+            <div class="confirm-btns">
+                <button class="confirm-cancel" id="confirmCancel">Cancel</button>
+                <button class="confirm-ok" id="confirmOk">End & Save</button>
+            </div>
+        </div>
+    </div>
 
     <script src="app.js"></script>
     <script>
