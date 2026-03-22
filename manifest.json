@@ -4,8 +4,8 @@
     "description": "Elite Training System",
     "start_url": "./index.html",
     "display": "standalone",
-    "background_color": "#0a0a0f",
-    "theme_color": "#00d4ff",
+    "background_color": "#000000",
+    "theme_color": "#000000",
     "orientation": "portrait",
     "icons": [
         {
