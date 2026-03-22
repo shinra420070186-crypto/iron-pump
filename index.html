@@ -165,8 +165,8 @@
 
         /* Day Card Glow + Glass Edge */
         .day-card{box-shadow:0 0 16px rgba(0,212,255,.12),inset 0 1px 0 rgba(255,255,255,.06)}
-        .day-card::before{content:'';position:absolute;inset:-60px;border-radius:50%;background:conic-gradient(transparent 30%,var(--cyan) 50%,rgba(255,255,255,.5) 55%,var(--blue) 60%,transparent 80%);animation:borderRotate 5s linear infinite;pointer-events:none;z-index:0;transform:translateZ(0);will-change:transform}
-        .day-card::after{content:'';position:absolute;inset:1.5px;border-radius:17px;background:linear-gradient(135deg,rgba(31,31,46,.95) 0%,rgba(18,18,26,.98) 100%);z-index:1;pointer-events:none}
+        .day-card::before{content:'';position:absolute;inset:-80px;border-radius:50%;background:conic-gradient(var(--blue) 0deg,var(--cyan) 40deg,rgba(255,255,255,.6) 60deg,var(--cyan) 80deg,var(--blue) 140deg,var(--cyan) 200deg,rgba(255,255,255,.3) 220deg,var(--cyan) 250deg,var(--blue) 320deg,var(--cyan) 350deg,var(--blue) 360deg);animation:borderRotate 5s linear infinite;pointer-events:none;z-index:0;transform:translateZ(0);will-change:transform}
+        .day-card::after{content:'';position:absolute;inset:1.5px;border-radius:17px;background:linear-gradient(135deg,rgba(31,31,46,.96) 0%,rgba(18,18,26,.98) 100%);z-index:1;pointer-events:none}
         .day-left,.day-arrow,.day-num,.day-sub,.day-count{position:relative;z-index:2}
         @keyframes borderRotate{to{transform:rotate(360deg) translateZ(0)}}
         .water-ripple{position:absolute;border-radius:50%;background:radial-gradient(circle,rgba(0,212,255,.35) 0%,rgba(0,212,255,.12) 40%,transparent 70%);transform:scale(0);pointer-events:none;z-index:3;animation:waterRipple .9s cubic-bezier(.2,.8,.4,1) forwards;will-change:transform,opacity}
