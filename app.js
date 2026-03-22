@@ -105,16 +105,6 @@ function createRipple(e,el){
 // ═══════════════════════════════════════════════════════════
 // HELPERS
 // ═══════════════════════════════════════════════════════════
-function getMonWeek(date){
-    // returns Monday of the week containing date
-    const d=new Date(date);
-    const day=d.getDay();
-    const diff=day===0?-6:1-day; // Monday=0 offset
-    d.setDate(d.getDate()+diff);
-    d.setHours(0,0,0,0);
-    return d.getTime();
-}
-
 function epley1RM(weight,reps){
     if(reps===1)return weight;
     return Math.round(weight*(1+reps/30));
@@ -229,9 +219,9 @@ class IronPump {
     // ─── Previous Session Data ───
     getPrevSession(dayId){
         const all=JSON.parse(localStorage.getItem('ironpump_workouts')||'[]');
-        const prev=all.filter(w=>w.dayId===dayId).slice(-2);
+        // only get completed saved sessions for this day, not current
+        const prev=all.filter(w=>w.dayId===dayId&&w.endTime);
         if(prev.length<1)return null;
-        // return last completed session (not current)
         return prev[prev.length-1];
     }
 
@@ -492,7 +482,14 @@ class IronPump {
     stopRest(){if(this.restInt)clearInterval(this.restInt);document.getElementById('restOverlay').classList.add('hidden')}
 
     // ─── Finish ───
-    setupComplete(){document.getElementById('compClose').addEventListener('click',()=>{document.getElementById('completeOverlay').classList.add('hidden');this.sound.play('tap')})}
+    setupComplete(){
+        document.getElementById('compClose').addEventListener('click',()=>{document.getElementById('completeOverlay').classList.add('hidden');this.sound.play('tap')});
+        document.getElementById('woFinish').addEventListener('click',()=>{
+            if(!this.workout)return;
+            if(!confirm('End workout and save progress?'))return;
+            this.finishWorkout();this.sound.play('complete');this.vib(30);
+        });
+    }}
 
     finishWorkout(){
         if(!this.workout)return;if(this.timerInt)clearInterval(this.timerInt);this.stopRest();
@@ -702,7 +699,6 @@ class IronPump {
 
         let weekVol=0,lastWeekVol=0,monthSessions=0,totalEx=0;
         let bestSessionVol=0,bestSessionDate='';
-        let totalLoad=0;
 
         all.forEach(wo=>{
             const t=new Date(wo.startTime).getTime();
@@ -712,9 +708,6 @@ class IronPump {
             if(t>monthAgo)monthSessions++;
             totalEx+=(wo.exercises||[]).filter(e=>e.completed&&!e.skipped).length;
             if(vol>bestSessionVol){bestSessionVol=vol;bestSessionDate=wo.startTime;}
-            // training load = sets × avg intensity proxy
-            const sets=wo.totalSets||0;
-            totalLoad+=sets;
         });
 
         // Performance: vol vs last week + streak
@@ -907,7 +900,7 @@ class IronPump {
                 if(data.prs)localStorage.setItem('ip_prs',JSON.stringify(data.prs));
                 if(data.theme){localStorage.setItem('ip_theme',data.theme);this.applyTheme(data.theme)}
                 if(data.restDur){localStorage.setItem('ip_rest_dur',data.restDur);this.restDur=parseInt(data.restDur)}
-                alert('Data imported successfully!');this.loadHistory();this.updateIntel();this.renderWeight();
+                alert('Data imported successfully!');this.loadHistory();this.updateIntel();
             }catch(err){alert('Invalid backup file!')}
         };
         reader.readAsText(file);e.target.value='';
