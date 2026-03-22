@@ -42,9 +42,9 @@
         .app{min-height:100vh;min-height:100dvh;padding-bottom:90px;opacity:0;transform:translateY(10px);transition:opacity .6s,transform .6s}
         .app.loaded{opacity:1;transform:translateY(0)}
 
-        .header{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:14px 20px;background:linear-gradient(180deg,var(--void) 60%,transparent);backdrop-filter:blur(20px)}
-        .header::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent 0%,transparent 20%,var(--cyan) 50%,transparent 80%,transparent 100%);background-size:200% 100%;animation:headerGlow 4s ease-in-out infinite alternate;box-shadow:0 0 8px rgba(0,212,255,.25)}
-        @keyframes headerGlow{0%{background-position:0% 0}100%{background-position:200% 0}}
+        .header{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:14px 20px;background:linear-gradient(180deg,var(--void) 60%,transparent);backdrop-filter:blur(20px);overflow:hidden}
+        .header::after{content:'';position:absolute;bottom:-1px;left:-40px;width:80px;height:3px;background:radial-gradient(ellipse,rgba(0,212,255,.9) 0%,rgba(0,212,255,.3) 50%,transparent 100%);filter:blur(2px);animation:headerBounce 5s ease-in-out infinite alternate}
+        @keyframes headerBounce{0%{transform:translateX(0)}100%{transform:translateX(calc(100vw - 40px))}}
         .logo{display:flex;align-items:center;gap:8px}
         .logo-icon{width:28px;height:28px;color:var(--cyan);filter:drop-shadow(0 0 10px var(--cyan))}
         .logo-text{font-size:1.15rem;font-weight:700;letter-spacing:.1em}
@@ -160,11 +160,19 @@
         .set-glass-unit{font-size:.7rem;color:var(--text4);font-family:var(--mono);letter-spacing:.1em;text-transform:uppercase}
         .set-glass-divider{width:1px;height:60px;background:linear-gradient(to bottom,transparent,rgba(255,255,255,.1),transparent)}
 
+
         /* Day Card Glow + Glass Edge */
         .day-card{box-shadow:0 0 18px rgba(0,212,255,.1),0 0 6px rgba(0,212,255,.06),inset 0 1px 0 rgba(255,255,255,.08)}
-        .day-card::before{content:'';position:absolute;inset:0;border-radius:18px;padding:1px;background:conic-gradient(from var(--angle,0deg),transparent 20%,var(--cyan) 40%,rgba(0,102,255,.8) 50%,var(--cyan) 60%,transparent 80%);-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask-composite:exclude;opacity:.85;transition:opacity .4s;animation:borderRotate 6s linear infinite}
-        .day-card:hover::before,.day-card:active::before{opacity:1}
-        @keyframes borderRotate{from{--angle:0deg}to{--angle:360deg}}
+        .day-card::before{content:'';position:absolute;inset:0;border-radius:18px;border:1px solid rgba(0,212,255,.25);pointer-events:none}
+        .day-card::after{content:'';position:absolute;width:60px;height:60px;border-radius:50%;background:radial-gradient(circle,rgba(0,212,255,.55) 0%,rgba(0,212,255,.15) 50%,transparent 70%);filter:blur(6px);pointer-events:none;animation:glowTravel 8s linear infinite;top:-30px;left:-30px}
+        @keyframes glowTravel{
+            0%{transform:translate(0px,30px)}
+            25%{transform:translate(calc(var(--card-w,320px) + 0px),30px)}
+            50%{transform:translate(calc(var(--card-w,320px) + 0px),calc(var(--card-h,80px) + 0px))}
+            75%{transform:translate(0px,calc(var(--card-h,80px) + 0px))}
+            100%{transform:translate(0px,30px)}
+        }
+        .day-card:hover::before{border-color:rgba(0,212,255,.5)}
         .water-ripple{position:absolute;border-radius:50%;background:radial-gradient(circle,rgba(0,212,255,.35) 0%,rgba(0,212,255,.12) 40%,transparent 70%);transform:scale(0);pointer-events:none;animation:waterRipple .9s cubic-bezier(.2,.8,.4,1) forwards}
         @keyframes waterRipple{0%{transform:scale(0);opacity:.9}60%{opacity:.4}100%{transform:scale(3.5);opacity:0}}
 
