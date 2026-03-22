@@ -1,6 +1,6 @@
 // ═══════════════════════════════════════════════════════════
-// IRON PUMP — Elite Training System v2
-// Body Weight + PR Tracking + Muscle Volume + Themes + Backup
+// IRON PUMP — Elite Training System v3
+// Full Intelligence + Progress + History Expand + Prev Session
 // ═══════════════════════════════════════════════════════════
 
 const PROGRAM = [
@@ -70,10 +70,10 @@ const PROGRAM = [
 ];
 
 const THEMES = {
-    cyan: {accent:'#00d4ff',dark:'#0066ff',grad:'linear-gradient(135deg,#00d4ff,#0066ff)'},
+    cyan:   {accent:'#00d4ff',dark:'#0066ff',grad:'linear-gradient(135deg,#00d4ff,#0066ff)'},
     violet: {accent:'#6b5eff',dark:'#4433dd',grad:'linear-gradient(135deg,#6b5eff,#4433dd)'},
-    red: {accent:'#ff4466',dark:'#ff0055',grad:'linear-gradient(135deg,#ff4466,#ff0055)'},
-    gold: {accent:'#ffaa00',dark:'#ff6600',grad:'linear-gradient(135deg,#ffaa00,#ff6600)'}
+    red:    {accent:'#ff4466',dark:'#ff0055',grad:'linear-gradient(135deg,#ff4466,#ff0055)'},
+    gold:   {accent:'#ffaa00',dark:'#ff6600',grad:'linear-gradient(135deg,#ffaa00,#ff6600)'}
 };
 
 // ═══════════════════════════════════════════════════════════
@@ -100,6 +100,24 @@ function createRipple(e,el){
     rip.style.left=(e.clientX||e.touches?.[0]?.clientX||0)-r.left-sz/2+'px';
     rip.style.top=(e.clientY||e.touches?.[0]?.clientY||0)-r.top-sz/2+'px';
     rip.className='ripple';el.appendChild(rip);setTimeout(()=>rip.remove(),600);
+}
+
+// ═══════════════════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════════════════
+function getMonWeek(date){
+    // returns Monday of the week containing date
+    const d=new Date(date);
+    const day=d.getDay();
+    const diff=day===0?-6:1-day; // Monday=0 offset
+    d.setDate(d.getDate()+diff);
+    d.setHours(0,0,0,0);
+    return d.getTime();
+}
+
+function epley1RM(weight,reps){
+    if(reps===1)return weight;
+    return Math.round(weight*(1+reps/30));
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -149,9 +167,10 @@ class IronPump {
                 btn.classList.add('active');
                 document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
                 document.getElementById('page-'+page).classList.add('active');
+                window.scrollTo({top:0,behavior:'instant'});
                 if(page==='intel'){this.updateIntel();this.drawChart();this.renderMuscleVolume()}
                 if(page==='history')this.loadHistory();
-                if(page==='weight')this.renderWeight();
+                if(page==='progress')this.renderProgress();
                 this.sound.play('tap');this.vib(10);
             });
         });
@@ -162,6 +181,13 @@ class IronPump {
         document.getElementById('backBtn').addEventListener('click',()=>{
             if(this.workout&&this.workout.totalSets>0){if(!confirm('Discard active workout?'))return}
             this.cancelWorkout();this.sound.play('back');this.vib(10);
+        });
+        // Weight sub-page back
+        const bwBack=document.getElementById('bwBackBtn');
+        if(bwBack)bwBack.addEventListener('click',()=>{
+            document.getElementById('bwSubPage').classList.add('hidden');
+            document.getElementById('intelMain').classList.remove('hidden');
+            this.sound.play('back');this.vib(10);
         });
     }
 
@@ -180,14 +206,13 @@ class IronPump {
     renderDays(){
         const grid=document.getElementById('dayGrid');if(!grid)return;
         grid.innerHTML=PROGRAM.map((d,i)=>`
-            <div class="day-card" data-day="${d.id}" style="animation:popIn .4s cubic-bezier(.34,1.56,.64,1) ${i*.08}s both">
+            <div class="day-card" data-day="${d.id}" style="animation:popIn .35s ease ${i*.06}s both">
                 <div class="day-left"><span class="day-num">${d.name}</span><span class="day-sub">${d.label}</span><span class="day-count">${d.exercises.length} exercises</span></div>
                 <svg class="day-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
             </div>`).join('');
         grid.addEventListener('click',(e)=>{
             const c=e.target.closest('.day-card');
             if(c){
-                // water ripple
                 const r=c.getBoundingClientRect();
                 const rip=document.createElement('span');
                 const sz=Math.max(r.width,r.height)*1.4;
@@ -199,6 +224,25 @@ class IronPump {
                 this.startWorkout(c.dataset.day);
             }
         });
+    }
+
+    // ─── Previous Session Data ───
+    getPrevSession(dayId){
+        const all=JSON.parse(localStorage.getItem('ironpump_workouts')||'[]');
+        const prev=all.filter(w=>w.dayId===dayId).slice(-2);
+        if(prev.length<1)return null;
+        // return last completed session (not current)
+        return prev[prev.length-1];
+    }
+
+    getPrevSetData(dayId,exName,setIndex){
+        const session=this.getPrevSession(dayId);
+        if(!session)return null;
+        const ex=(session.exercises||[]).find(e=>e.name===exName);
+        if(!ex||!ex.sets||!ex.sets[setIndex])return null;
+        const s=ex.sets[setIndex];
+        if(parseFloat(s.weight)>0&&parseFloat(s.reps)>0)return s;
+        return null;
     }
 
     // ─── Start Workout ───
@@ -235,18 +279,21 @@ class IronPump {
         if(this.exIndex>=wo.exercises.length){this.finishWorkout();return}
         const ex=wo.exercises[this.exIndex],num=this.exIndex+1,total=wo.exercises.length;
 
-        // current set index = number of completed sets so far
         if(ex.currentSetIndex===undefined)ex.currentSetIndex=0;
         const si=ex.currentSetIndex;
         const set=ex.sets[si]||{weight:'',reps:''};
         if(!ex.sets[si])ex.sets[si]=set;
 
         const hasData=parseFloat(set.weight)>0&&parseFloat(set.reps)>0;
-        const hasPrevSets=ex.sets.slice(0,si).some(s=>parseFloat(s.weight)>0&&parseFloat(s.reps)>0);
         const canFinish=si>0||hasData;
 
         // per-set PR
         const prData=this.getSetPR(ex.name,si);
+
+        // previous session data
+        const prevSet=this.getPrevSetData(wo.dayId,ex.name,si);
+        const prevHtml=prevSet?`<div class="prev-set-hint"><span class="prev-set-label">LAST TIME</span><span class="prev-set-val">${prevSet.weight} kg × ${prevSet.reps}</span></div>`:'';
+
         const prHtml=`<div class="pr-ref-card" id="prBanner">
             <div class="pr-ref-left"><span class="pr-ref-label">SET ${si+1} BEST</span>
             <div class="pr-ref-values">
@@ -260,7 +307,10 @@ class IronPump {
         const setHtml=`<div class="set-glass-card" id="activeSetCard">
             <div class="set-glass-top">
                 <span class="set-glass-num">SET ${si+1}</span>
-                ${si>0?`<span class="set-glass-done">${si} done</span>`:''}
+                <div style="display:flex;align-items:center;gap:10px">
+                    ${prevHtml}
+                    ${si>0?`<span class="set-glass-done">${si} done</span>`:''}
+                </div>
             </div>
             <div class="set-glass-inputs">
                 <div class="set-glass-field">
@@ -295,7 +345,6 @@ class IronPump {
             if(r)ex.sets[si].reps=r.value;
         };
 
-        // live input update
         ['setWeight','setReps'].forEach(id=>{
             const el=document.getElementById(id);
             if(!el)return;
@@ -307,24 +356,21 @@ class IronPump {
             el.addEventListener('focus',()=>el.select());
         });
 
-        // Next Set button — save current, animate out, show next
         document.getElementById('addSetBtn').addEventListener('click',()=>{
             syncCurrent();
             const card=document.getElementById('activeSetCard');
-            if(card){card.style.transition='all .35s cubic-bezier(.4,0,.2,1)';card.style.opacity='0';card.style.transform='translateX(-60px) scale(.95)'}
+            if(card){card.style.transition='opacity .25s ease,transform .25s ease';card.style.opacity='0';card.style.transform='translateX(-40px)'}
             setTimeout(()=>{
                 ex.currentSetIndex=si+1;
                 if(!ex.sets[si+1])ex.sets[si+1]={weight:'',reps:''};
                 this.updateLive();this.renderEx();this.sound.play('add');this.vib(10);
-            },320);
+            },260);
         });
 
-        // Finish Exercise button
         const fb=document.getElementById('finishExBtn');
         if(fb)fb.addEventListener('click',()=>{
             syncCurrent();
             ex.completed=true;
-            // save per-set PRs
             ex.sets.forEach((s,i)=>{
                 const w=parseFloat(s.weight),r=parseFloat(s.reps);
                 if(w>0&&r>0)this.saveSetPR(ex.name,i,w,r);
@@ -332,11 +378,10 @@ class IronPump {
             this.exIndex++;this.updateHeader();this.updateLive();
             this.sound.play('finish');this.vib(25);this.startRestTimer();
             const card=document.getElementById('activeSetCard');
-            if(card){card.style.transition='all .35s cubic-bezier(.4,0,.2,1)';card.style.opacity='0';card.style.transform='translateY(-30px) scale(.95)'}
-            setTimeout(()=>this.renderEx(),320);
+            if(card){card.style.transition='opacity .25s ease,transform .25s ease';card.style.opacity='0';card.style.transform='translateY(-20px)'}
+            setTimeout(()=>this.renderEx(),260);
         });
 
-        // Skip button
         document.getElementById('skipBtn').addEventListener('click',()=>{
             syncCurrent();
             if(!canFinish){ex.skipped=true;ex.completed=true;}
@@ -347,13 +392,16 @@ class IronPump {
             this.exIndex++;this.updateHeader();this.updateLive();
             this.sound.play('skip');this.vib(15);
             if(canFinish)this.startRestTimer();
-            setTimeout(()=>this.renderEx(),320);
+            setTimeout(()=>this.renderEx(),260);
         });
 
-        // animate card in
         const newCard=document.getElementById('activeSetCard');
-        if(newCard){newCard.style.opacity='0';newCard.style.transform='translateX(60px) scale(.95)';
-            requestAnimationFrame(()=>{newCard.style.transition='all .4s cubic-bezier(.34,1.2,.64,1)';newCard.style.opacity='1';newCard.style.transform='translateX(0) scale(1)'});
+        if(newCard){
+            newCard.style.opacity='0';newCard.style.transform='translateX(40px)';
+            requestAnimationFrame(()=>{
+                newCard.style.transition='opacity .3s ease,transform .3s ease';
+                newCard.style.opacity='1';newCard.style.transform='translateX(0)';
+            });
         }
 
         this.updatePRBannerForSet(ex,si);
@@ -417,7 +465,6 @@ class IronPump {
         }
     }
 
-    // kept for backward compat
     getPR(exName){return this.prRecords[exName]||null;}
     savePR(exName,weight,reps){this.prRecords[exName]={weight,reps,date:new Date().toISOString()};localStorage.setItem('ip_prs',JSON.stringify(this.prRecords));}
 
@@ -471,6 +518,14 @@ class IronPump {
 
     // ─── Body Weight ───
     setupWeight(){
+        // Open weight sub-page from intel
+        const bwBtn=document.getElementById('bwOpenBtn');
+        if(bwBtn)bwBtn.addEventListener('click',()=>{
+            document.getElementById('intelMain').classList.add('hidden');
+            document.getElementById('bwSubPage').classList.remove('hidden');
+            this.renderWeight();this.sound.play('tap');this.vib(10);
+        });
+
         document.getElementById('bwSave').addEventListener('click',()=>{
             const val=parseFloat(document.getElementById('bwInput').value);
             if(!val||val<20||val>300){alert('Enter a valid weight (20-300 kg)');return}
@@ -484,19 +539,16 @@ class IronPump {
 
     renderWeight(){
         const logs=JSON.parse(localStorage.getItem('ip_bw')||'[]');
-        // Current weight display
         const cur=document.getElementById('bwCurrent');
-        if(logs.length===0){cur.innerHTML='<div class="bw-current"><span class="bw-label">No weight logged yet</span><span class="bw-value">—</span></div>';
-        }else{
+        if(logs.length===0){cur.innerHTML='<div class="bw-current"><span class="bw-label">No weight logged yet</span><span class="bw-value">—</span></div>';}
+        else{
             const latest=logs[logs.length-1];const prev=logs.length>1?logs[logs.length-2]:null;
             const diff=prev?(latest.weight-prev.weight).toFixed(1):0;
             const cls=diff>0?'up':diff<0?'down':'same';
             const sign=diff>0?'+':'';
             cur.innerHTML=`<div class="bw-current"><span class="bw-label">Current Weight</span><div><span class="bw-value">${latest.weight} kg</span>${prev?`<span class="bw-change ${cls}">${sign}${diff} kg</span>`:''}</div></div>`;
         }
-        // Chart
         this.drawWeightChart(logs);
-        // History
         const hist=document.getElementById('bwHistory');
         if(logs.length===0){hist.innerHTML='';return}
         hist.innerHTML='<div class="settings-card"><h3>Weight Log</h3>'+logs.slice().reverse().slice(0,20).map(l=>{
@@ -511,35 +563,25 @@ class IronPump {
         const rect=canvas.getBoundingClientRect();canvas.width=rect.width*dpr;canvas.height=rect.height*dpr;
         ctx.scale(dpr,dpr);const w=rect.width,h=rect.height;
         const pad={t:20,r:15,b:30,l:45};const cw=w-pad.l-pad.r,ch=h-pad.t-pad.b;
-
         if(logs.length<2){ctx.fillStyle='rgba(255,255,255,0.3)';ctx.font='13px Space Grotesk';ctx.textAlign='center';ctx.fillText('Log more weights to see trend',w/2,h/2);return}
-
         const data=logs.slice(-20).map(l=>l.weight);
         const labels=logs.slice(-20).map(l=>{const d=new Date(l.date);return(d.getMonth()+1)+'/'+d.getDate()});
         const mx=Math.max(...data)*1.02,mn=Math.min(...data)*.98,range=mx-mn||1;
         const xS=(i)=>pad.l+(i/(data.length-1))*cw;
         const yS=(v)=>pad.t+ch-((v-mn)/range)*ch;
-
         ctx.strokeStyle='rgba(255,255,255,0.05)';ctx.lineWidth=1;
         for(let i=0;i<=4;i++){const y=pad.t+(i/4)*ch;ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(w-pad.r,y);ctx.stroke();
             ctx.fillStyle='rgba(255,255,255,0.4)';ctx.font='10px JetBrains Mono';ctx.textAlign='right';
             ctx.fillText((mx-(i/4)*range).toFixed(1),pad.l-8,y+4)}
-
         ctx.textAlign='center';labels.forEach((l,i)=>{if(i%Math.ceil(data.length/6)===0)ctx.fillText(l,xS(i),h-8)});
-
         const grad=ctx.createLinearGradient(0,pad.t,0,h-pad.b);grad.addColorStop(0,'rgba(0,255,136,0.3)');grad.addColorStop(1,'rgba(0,255,136,0)');
         ctx.beginPath();ctx.moveTo(xS(0),h-pad.b);for(let i=0;i<data.length;i++)ctx.lineTo(xS(i),yS(data[i]));
         ctx.lineTo(xS(data.length-1),h-pad.b);ctx.closePath();ctx.fillStyle=grad;ctx.fill();
-
-        ctx.shadowColor='rgba(0,255,136,0.5)';ctx.shadowBlur=15;
         ctx.beginPath();ctx.strokeStyle='#00ff88';ctx.lineWidth=3;ctx.lineCap='round';ctx.lineJoin='round';
-        for(let i=0;i<data.length;i++){if(i===0)ctx.moveTo(xS(i),yS(data[i]));else ctx.lineTo(xS(i),yS(data[i]))}
-        ctx.stroke();ctx.shadowBlur=0;
-
+        for(let i=0;i<data.length;i++){if(i===0)ctx.moveTo(xS(i),yS(data[i]));else ctx.lineTo(xS(i),yS(data[i]))}ctx.stroke();
         for(let i=0;i<data.length;i++){const x=xS(i),y=yS(data[i]);
-            ctx.beginPath();ctx.arc(x,y,5,0,Math.PI*2);ctx.fillStyle='rgba(0,255,136,0.2)';ctx.fill();
-            ctx.beginPath();ctx.arc(x,y,3,0,Math.PI*2);ctx.fillStyle='#00ff88';ctx.fill();
-            ctx.beginPath();ctx.arc(x,y,1.5,0,Math.PI*2);ctx.fillStyle='#fff';ctx.fill()}
+            ctx.beginPath();ctx.arc(x,y,4,0,Math.PI*2);ctx.fillStyle='rgba(0,255,136,0.2)';ctx.fill();
+            ctx.beginPath();ctx.arc(x,y,3,0,Math.PI*2);ctx.fillStyle='#00ff88';ctx.fill();}
     }
 
     // ─── Muscle Volume ───
@@ -554,16 +596,13 @@ class IronPump {
                 muscles[m]+=ex.sets.filter(s=>parseFloat(s.weight)>0&&parseFloat(s.reps)>0).length;
             });
         });
-
         const grid=document.getElementById('muscleGrid');
         const sorted=Object.entries(muscles).sort((a,b)=>b[1]-a[1]);
         const max=sorted.length>0?sorted[0][1]:1;
         const colors=['c1','c2','c3','c4'];
-
         if(sorted.length===0){grid.innerHTML='<p style="text-align:center;color:var(--text4);padding:20px">Complete workouts to see muscle breakdown</p>';return}
-
         grid.innerHTML=sorted.map((m,i)=>`
-            <div class="muscle-row" style="animation:popIn .3s ease ${i*.06}s both">
+            <div class="muscle-row" style="animation:popIn .3s ease ${i*.05}s both">
                 <div class="muscle-info"><span class="muscle-name">${m[0]}</span><span class="muscle-sets">${m[1]} sets</span></div>
                 <div class="muscle-bar"><div class="muscle-bar-fill ${colors[i%4]}" style="width:${(m[1]/max)*100}%"></div></div>
             </div>`).join('');
@@ -571,41 +610,170 @@ class IronPump {
 
     // ─── History ───
     loadHistory(){
-        const all=JSON.parse(localStorage.getItem('ironpump_workouts')||'[]');const list=document.getElementById('historyList');
+        const all=JSON.parse(localStorage.getItem('ironpump_workouts')||'[]');
+        const list=document.getElementById('historyList');
         if(all.length===0){list.innerHTML='<div class="no-history"><p>No workouts yet</p><p>Complete your first session!</p></div>';return}
         list.innerHTML=all.slice().reverse().map((wo,i)=>{
-            const d=new Date(wo.startTime);const ds=d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
-            return `<div class="history-card" style="animation:popIn .4s ease ${i*.06}s both"><div class="history-top"><span class="history-split">${wo.splitName||wo.dayName}</span><span class="history-date">${ds}</span></div><div class="history-stats"><span class="history-stat">Vol: <span>${Math.round(wo.totalVolume||0).toLocaleString()} kg</span></span><span class="history-stat">Sets: <span>${wo.totalSets||0}</span></span><span class="history-stat">Time: <span>${wo.duration||0}m</span></span></div></div>`;
+            const d=new Date(wo.startTime);
+            const ds=d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+            const exDetails=wo.exercises?wo.exercises.filter(e=>e.completed&&!e.skipped).map(ex=>{
+                const sets=ex.sets?ex.sets.filter(s=>parseFloat(s.weight)>0&&parseFloat(s.reps)>0):[];
+                if(sets.length===0)return '';
+                return `<div class="hist-ex-row"><span class="hist-ex-name">${ex.name}</span><span class="hist-ex-sets">${sets.map(s=>`${s.weight}kg×${s.reps}`).join(', ')}</span></div>`;
+            }).join(''):'';
+            return `<div class="history-card" data-idx="${i}" style="animation:popIn .3s ease ${i*.05}s both">
+                <div class="history-top" onclick="this.closest('.history-card').classList.toggle('expanded')">
+                    <div><span class="history-split">${wo.splitName||wo.dayName}</span><span class="history-date">${ds}</span></div>
+                    <svg class="hist-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
+                <div class="history-stats"><span class="history-stat">Vol: <span>${Math.round(wo.totalVolume||0).toLocaleString()} kg</span></span><span class="history-stat">Sets: <span>${wo.totalSets||0}</span></span><span class="history-stat">Time: <span>${wo.duration||0}m</span></span></div>
+                <div class="hist-details">${exDetails}</div>
+            </div>`;
+        }).join('');
+    }
+
+    // ─── Progress Page ───
+    renderProgress(){
+        const container=document.getElementById('progressList');
+        if(!container)return;
+        const prs=JSON.parse(localStorage.getItem('ip_prs')||'{}');
+
+        // Group by exercise name
+        const exercises={};
+        Object.entries(prs).forEach(([key,val])=>{
+            const match=key.match(/^(.+)__set(\d+)$/);
+            if(!match)return;
+            const name=match[1],setIdx=parseInt(match[2]);
+            if(!exercises[name])exercises[name]=[];
+            exercises[name][setIdx]=val;
+        });
+
+        if(Object.keys(exercises).length===0){
+            container.innerHTML='<div class="no-history"><p>No PRs yet</p><p>Complete workouts to track records!</p></div>';
+            return;
+        }
+
+        container.innerHTML=Object.entries(exercises).map(([name,sets],i)=>{
+            // find best set for 1RM
+            let best1RM=0;
+            const setsHtml=sets.filter(Boolean).map((s,si)=>{
+                const oneRM=epley1RM(s.weight,s.reps);
+                if(oneRM>best1RM)best1RM=oneRM;
+                const d=new Date(s.date);
+                const ds=d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'2-digit'});
+                return `<div class="pr-set-row">
+                    <span class="pr-set-num">Set ${si+1}</span>
+                    <span class="pr-set-val">${s.weight} kg × ${s.reps}</span>
+                    <span class="pr-set-1rm">~${oneRM} kg 1RM</span>
+                    <span class="pr-set-date">${ds}</span>
+                </div>`;
+            }).join('');
+
+            return `<div class="pr-ex-card" style="animation:popIn .3s ease ${i*.05}s both">
+                <div class="pr-ex-header">
+                    <div>
+                        <span class="pr-ex-name">${name}</span>
+                        <span class="pr-ex-1rm">Est. 1RM: ${best1RM} kg</span>
+                    </div>
+                    <span class="pr-ex-badge">🏆</span>
+                </div>
+                <div class="pr-sets-list">${setsHtml}</div>
+            </div>`;
         }).join('');
     }
 
     // ─── Intelligence ───
+    getMonSunWeek(){
+        const now=new Date();
+        const day=now.getDay();
+        const monday=new Date(now);
+        monday.setDate(now.getDate()-(day===0?6:day-1));
+        monday.setHours(0,0,0,0);
+        const lastMonday=new Date(monday);
+        lastMonday.setDate(monday.getDate()-7);
+        return{thisWeekStart:monday.getTime(),lastWeekStart:lastMonday.getTime(),lastWeekEnd:monday.getTime()};
+    }
+
     updateIntel(){
         const all=JSON.parse(localStorage.getItem('ironpump_workouts')||'[]');
-        const now=Date.now(),weekAgo=now-7*86400000,monthAgo=now-30*86400000;
+        const now=Date.now();
+        const {thisWeekStart,lastWeekStart,lastWeekEnd}=this.getMonSunWeek();
+        const monthAgo=now-30*86400000;
+
         let weekVol=0,lastWeekVol=0,monthSessions=0,totalEx=0;
-        all.forEach(wo=>{const t=new Date(wo.startTime).getTime();
-            if(t>weekAgo)weekVol+=wo.totalVolume||0;
-            if(t>weekAgo-7*86400000&&t<=weekAgo)lastWeekVol+=wo.totalVolume||0;
+        let bestSessionVol=0,bestSessionDate='';
+        let totalLoad=0;
+
+        all.forEach(wo=>{
+            const t=new Date(wo.startTime).getTime();
+            const vol=wo.totalVolume||0;
+            if(t>=thisWeekStart){weekVol+=vol;}
+            if(t>=lastWeekStart&&t<lastWeekEnd){lastWeekVol+=vol;}
             if(t>monthAgo)monthSessions++;
             totalEx+=(wo.exercises||[]).filter(e=>e.completed&&!e.skipped).length;
+            if(vol>bestSessionVol){bestSessionVol=vol;bestSessionDate=wo.startTime;}
+            // training load = sets × avg intensity proxy
+            const sets=wo.totalSets||0;
+            totalLoad+=sets;
         });
 
+        // Performance: vol vs last week + streak
         const streak=this.getStreak(all);
-        let perf=0;if(all.length>0)perf=Math.min(100,Math.round((weekVol/(lastWeekVol||weekVol||1))*70+streak*3));
+        let perf=0;
+        if(all.length>0){
+            const volRatio=weekVol/(lastWeekVol||weekVol||1);
+            perf=Math.min(100,Math.round(volRatio*65+streak*3+(monthSessions>8?15:monthSessions>4?8:0)));
+        }
+
+        // Consistency: avg sessions/week vs 5
         const weeksTracked=Math.max(1,Math.ceil((now-new Date(all[0]?.startTime||now).getTime())/(7*86400000)));
         const avgPerWeek=all.length/weeksTracked;
         const cons=Math.min(100,Math.round((avgPerWeek/5)*100));
-        const last3Days=all.filter(wo=>new Date(wo.startTime).getTime()>now-3*86400000).length;
-        const rec=last3Days>=3?30:last3Days===2?55:last3Days===1?80:100;
 
-        this.animateVal('intel-vol',weekVol);this.animateVal('intel-sessions',monthSessions);
-        this.animateVal('intel-excount',totalEx);this.animateVal('intel-streak',streak);
-        this.animateRing('perfRing',perf,'perfNum');this.animateRing('consRing',cons,'consNum');this.animateRing('recRing',rec,'recNum');
+        // Recovery
+        const last3Days=all.filter(wo=>new Date(wo.startTime).getTime()>now-3*86400000).length;
+        const rec=last3Days>=3?25:last3Days===2?50:last3Days===1?80:100;
+
+        // Fatigue vs Fitness
+        const last7Load=all.filter(wo=>new Date(wo.startTime).getTime()>now-7*86400000).reduce((a,wo)=>a+(wo.totalSets||0),0);
+        const last28Load=all.filter(wo=>new Date(wo.startTime).getTime()>now-28*86400000).reduce((a,wo)=>a+(wo.totalSets||0),0);
+        const avgWeekLoad=last28Load/4;
+        let fitnessStatus='Balanced';
+        let fitnessColor='var(--cyan)';
+        if(last7Load>avgWeekLoad*1.3){fitnessStatus='High Load';fitnessColor='var(--amber)';}
+        else if(last7Load<avgWeekLoad*0.5&&avgWeekLoad>0){fitnessStatus='Deload Zone';fitnessColor='var(--green)';}
+        else if(avgWeekLoad===0){fitnessStatus='Start Training';fitnessColor='var(--text3)';}
+
+        this.animateVal('intel-vol',weekVol);
+        this.animateVal('intel-sessions',monthSessions);
+        this.animateVal('intel-excount',totalEx);
+        this.animateVal('intel-streak',streak);
+        this.animateRing('perfRing',perf,'perfNum');
+        this.animateRing('consRing',cons,'consNum');
+        this.animateRing('recRing',rec,'recNum');
 
         const vt=document.getElementById('volTrend');
         if(vt){const d=weekVol-lastWeekVol;vt.textContent=all.length===0?'No data':d>0?'+'+Math.round(d).toLocaleString()+' kg':d<0?Math.round(d).toLocaleString()+' kg':'Stable'}
-        const st=document.getElementById('sesTrend');if(st)st.textContent=all.length===0?'No data':avgPerWeek.toFixed(1)+'/week';
+        const st=document.getElementById('sesTrend');
+        if(st)st.textContent=all.length===0?'No data':avgPerWeek.toFixed(1)+'/week';
+
+        // Best session
+        const bsEl=document.getElementById('bestSession');
+        if(bsEl){
+            if(bestSessionVol>0){
+                const d=new Date(bestSessionDate);
+                const ds=d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+                bsEl.innerHTML=`<span class="intel-extra-val">${Math.round(bestSessionVol).toLocaleString()} kg</span><span class="intel-extra-sub">on ${ds}</span>`;
+            } else {
+                bsEl.innerHTML=`<span class="intel-extra-val">—</span>`;
+            }
+        }
+
+        // Fatigue indicator
+        const fatEl=document.getElementById('fatigueStatus');
+        if(fatEl){
+            fatEl.innerHTML=`<span class="intel-extra-val" style="color:${fitnessColor}">${fitnessStatus}</span><span class="intel-extra-sub">vs 4-week avg</span>`;
+        }
 
         this.renderMuscleVolume();
     }
@@ -646,7 +814,6 @@ class IronPump {
         if(wd.values.length<2){ctx.fillStyle='rgba(255,255,255,0.3)';ctx.font='13px Space Grotesk';ctx.textAlign='center';ctx.fillText('Complete workouts to see trends',w/2,h/2);return}
         const data=wd.values,labels=wd.labels;const mx=Math.max(...data)*1.15||100;
         const xS=(i)=>pad.l+(i/(data.length-1))*cw;const yS=(v)=>pad.t+ch-(v/mx)*ch;
-
         const draw=(progress)=>{
             ctx.clearRect(0,0,w,h);ctx.strokeStyle='rgba(255,255,255,0.05)';ctx.lineWidth=1;
             for(let i=0;i<=4;i++){const y=pad.t+(i/4)*ch;ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(w-pad.r,y);ctx.stroke();
@@ -656,26 +823,30 @@ class IronPump {
             const grad=ctx.createLinearGradient(0,pad.t,0,h-pad.b);grad.addColorStop(0,'rgba(0,212,255,0.3)');grad.addColorStop(1,'rgba(0,212,255,0)');
             ctx.beginPath();ctx.moveTo(xS(0),h-pad.b);for(let i=0;i<=Math.min(len,data.length-1);i++)ctx.lineTo(xS(i),yS(data[i]));
             ctx.lineTo(xS(Math.min(len,data.length-1)),h-pad.b);ctx.closePath();ctx.fillStyle=grad;ctx.fill();
-            ctx.shadowColor='rgba(0,212,255,0.5)';ctx.shadowBlur=15;ctx.beginPath();ctx.strokeStyle='#00d4ff';ctx.lineWidth=3;ctx.lineCap='round';ctx.lineJoin='round';
-            for(let i=0;i<=Math.min(len,data.length-1);i++){if(i===0)ctx.moveTo(xS(i),yS(data[i]));else ctx.lineTo(xS(i),yS(data[i]))}ctx.stroke();ctx.shadowBlur=0;
+            ctx.beginPath();ctx.strokeStyle='#00d4ff';ctx.lineWidth=3;ctx.lineCap='round';ctx.lineJoin='round';
+            for(let i=0;i<=Math.min(len,data.length-1);i++){if(i===0)ctx.moveTo(xS(i),yS(data[i]));else ctx.lineTo(xS(i),yS(data[i]))}ctx.stroke();
             for(let i=0;i<=Math.min(len,data.length-1);i++){const x=xS(i),y=yS(data[i]);
-                ctx.beginPath();ctx.arc(x,y,6,0,Math.PI*2);ctx.fillStyle='rgba(0,212,255,0.2)';ctx.fill();
-                ctx.beginPath();ctx.arc(x,y,4,0,Math.PI*2);ctx.fillStyle='#00d4ff';ctx.fill();
-                ctx.beginPath();ctx.arc(x,y,2,0,Math.PI*2);ctx.fillStyle='#fff';ctx.fill()}
+                ctx.beginPath();ctx.arc(x,y,5,0,Math.PI*2);ctx.fillStyle='rgba(0,212,255,0.2)';ctx.fill();
+                ctx.beginPath();ctx.arc(x,y,3,0,Math.PI*2);ctx.fillStyle='#00d4ff';ctx.fill();}
         };
         const st=performance.now();const anim=(now)=>{draw(1-Math.pow(1-Math.min((now-st)/1500,1),3));if((now-st)<1500)requestAnimationFrame(anim)};requestAnimationFrame(anim);
     }
 
     getChartData(){
         const all=JSON.parse(localStorage.getItem('ironpump_workouts')||'[]');const weeks={};
-        all.forEach(wo=>{const d=new Date(wo.startTime);const ws=new Date(d);ws.setDate(d.getDate()-d.getDay());
-            const key=ws.toLocaleDateString('en-US',{month:'short',day:'numeric'});weeks[key]=(weeks[key]||0)+(wo.totalVolume||0)});
+        all.forEach(wo=>{
+            const d=new Date(wo.startTime);
+            const monday=new Date(d);
+            const day=d.getDay();
+            monday.setDate(d.getDate()-(day===0?6:day-1));
+            const key=monday.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+            weeks[key]=(weeks[key]||0)+(wo.totalVolume||0);
+        });
         return{labels:Object.keys(weeks),values:Object.values(weeks).map(v=>Math.round(v))};
     }
 
     // ─── Settings ───
     setupSettings(){
-        // Themes
         document.querySelectorAll('.theme-btn').forEach(btn=>{
             btn.addEventListener('click',()=>{
                 document.querySelectorAll('.theme-btn').forEach(b=>b.classList.remove('active'));
@@ -683,14 +854,9 @@ class IronPump {
                 localStorage.setItem('ip_theme',btn.dataset.theme);this.sound.play('tap');this.vib(10);
             });
         });
-
-        // Export
         document.getElementById('exportBtn').addEventListener('click',()=>{this.exportData();this.sound.play('finish')});
-        // Import
         document.getElementById('importBtn').addEventListener('click',()=>{document.getElementById('importFile').click()});
         document.getElementById('importFile').addEventListener('change',(e)=>{this.importData(e);this.sound.play('complete')});
-
-        // Rest Duration Options
         const restOpts=document.getElementById('restOptions');
         [60,90,120,150,180].forEach(sec=>{
             const btn=document.createElement('button');
@@ -708,7 +874,6 @@ class IronPump {
         });
     }
 
-    // ─── Themes ───
     loadTheme(){const t=localStorage.getItem('ip_theme')||'cyan';this.applyTheme(t);
         setTimeout(()=>{const btn=document.querySelector(`[data-theme="${t}"]`);if(btn){document.querySelectorAll('.theme-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active')}},100)}
 
@@ -718,7 +883,6 @@ class IronPump {
         r.style.setProperty('--gcyan',t.grad);
     }
 
-    // ─── Backup ───
     exportData(){
         const data={workouts:JSON.parse(localStorage.getItem('ironpump_workouts')||'[]'),
             bodyweight:JSON.parse(localStorage.getItem('ip_bw')||'[]'),
