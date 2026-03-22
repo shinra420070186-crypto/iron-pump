@@ -18,9 +18,9 @@
     <style>
         :root{--void:#0a0a0f;--graphite:#12121a;--panel:#1f1f2e;--surface:#252532;--hover:#2a2a3a;--text1:#fff;--text2:rgba(255,255,255,.7);--text3:rgba(255,255,255,.5);--text4:rgba(255,255,255,.3);--cyan:#00d4ff;--blue:#0066ff;--violet:#6b5eff;--green:#00ff88;--amber:#ffaa00;--red:#ff4466;--gcyan:linear-gradient(135deg,#00d4ff,#0066ff);--gviolet:linear-gradient(135deg,#6b5eff,#4433dd);--gamber:linear-gradient(135deg,#ffaa00,#ff6600);--ggreen:linear-gradient(135deg,#00ff88,#00cc66);--glass:rgba(26,26,36,.8);--border:rgba(255,255,255,.08);--font:'Space Grotesk',-apple-system,sans-serif;--mono:'JetBrains Mono','SF Mono',monospace;--angle:0deg}
         @property --angle{syntax:'<angle>';initial-value:0deg;inherits:false}
-        *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
-        html{font-size:16px;-webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
-        body{font-family:var(--font);background:var(--void);color:var(--text1);line-height:1.5;min-height:100vh;min-height:100dvh;overflow-x:hidden;overscroll-behavior-y:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+        *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-backface-visibility:hidden;backface-visibility:hidden}
+        html{font-size:16px;-webkit-font-smoothing:antialiased;overscroll-behavior-y:none;-webkit-overflow-scrolling:touch}
+        body{font-family:var(--font);background:var(--void);color:var(--text1);line-height:1.5;min-height:100vh;min-height:100dvh;overflow-x:hidden;overscroll-behavior-y:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;transform:translateZ(0);-webkit-transform:translateZ(0)}
         input,textarea{-webkit-user-select:text;user-select:text}
         ::-webkit-scrollbar{width:0;height:0}
 
@@ -42,9 +42,9 @@
         .app{min-height:100vh;min-height:100dvh;padding-bottom:90px;opacity:0;transform:translateY(10px);transition:opacity .6s,transform .6s}
         .app.loaded{opacity:1;transform:translateY(0)}
 
-        .header{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:14px 20px;background:linear-gradient(180deg,var(--void) 60%,transparent);backdrop-filter:blur(20px);overflow:hidden}
-        .header::after{content:'';position:absolute;bottom:-1px;left:-40px;width:80px;height:3px;background:radial-gradient(ellipse,rgba(0,212,255,.9) 0%,rgba(0,212,255,.3) 50%,transparent 100%);filter:blur(2px);animation:headerBounce 5s ease-in-out infinite alternate}
-        @keyframes headerBounce{0%{transform:translateX(0)}100%{transform:translateX(calc(100vw - 40px))}}
+        .header{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:14px 20px;background:linear-gradient(180deg,var(--void) 60%,transparent);backdrop-filter:blur(20px);will-change:transform}
+        .header::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(0,212,255,.4),var(--cyan),rgba(0,102,255,.6),var(--cyan),rgba(0,212,255,.4),transparent);box-shadow:0 0 8px rgba(0,212,255,.4),0 0 16px rgba(0,212,255,.15);animation:edgeBreath 4s ease-in-out infinite alternate;will-change:opacity}
+        @keyframes edgeBreath{0%{opacity:.5;box-shadow:0 0 6px rgba(0,212,255,.3)}100%{opacity:1;box-shadow:0 0 14px rgba(0,212,255,.6),0 0 4px rgba(0,212,255,.3)}}
         .logo{display:flex;align-items:center;gap:8px}
         .logo-icon{width:28px;height:28px;color:var(--cyan);filter:drop-shadow(0 0 10px var(--cyan))}
         .logo-text{font-size:1.15rem;font-weight:700;letter-spacing:.1em}
@@ -162,18 +162,12 @@
 
 
         /* Day Card Glow + Glass Edge */
-        .day-card{box-shadow:0 0 18px rgba(0,212,255,.1),0 0 6px rgba(0,212,255,.06),inset 0 1px 0 rgba(255,255,255,.08)}
-        .day-card::before{content:'';position:absolute;inset:0;border-radius:18px;border:1px solid rgba(0,212,255,.25);pointer-events:none}
-        .day-card::after{content:'';position:absolute;width:60px;height:60px;border-radius:50%;background:radial-gradient(circle,rgba(0,212,255,.55) 0%,rgba(0,212,255,.15) 50%,transparent 70%);filter:blur(6px);pointer-events:none;animation:glowTravel 8s linear infinite;top:-30px;left:-30px}
-        @keyframes glowTravel{
-            0%{transform:translate(0px,30px)}
-            25%{transform:translate(calc(var(--card-w,320px) + 0px),30px)}
-            50%{transform:translate(calc(var(--card-w,320px) + 0px),calc(var(--card-h,80px) + 0px))}
-            75%{transform:translate(0px,calc(var(--card-h,80px) + 0px))}
-            100%{transform:translate(0px,30px)}
-        }
-        .day-card:hover::before{border-color:rgba(0,212,255,.5)}
-        .water-ripple{position:absolute;border-radius:50%;background:radial-gradient(circle,rgba(0,212,255,.35) 0%,rgba(0,212,255,.12) 40%,transparent 70%);transform:scale(0);pointer-events:none;animation:waterRipple .9s cubic-bezier(.2,.8,.4,1) forwards}
+        .day-card{box-shadow:0 0 16px rgba(0,212,255,.1),0 0 4px rgba(0,212,255,.06),inset 0 1px 0 rgba(255,255,255,.08);will-change:transform}
+        .day-card::before{content:'';position:absolute;inset:0;border-radius:18px;border:1px solid rgba(0,212,255,.3);box-shadow:0 0 10px rgba(0,212,255,.15),inset 0 0 10px rgba(0,212,255,.03);pointer-events:none;animation:cardEdgeBreath 4s ease-in-out infinite alternate;will-change:opacity}
+        .day-card::after{content:'';position:absolute;inset:0;border-radius:18px;border:1px solid transparent;background:linear-gradient(135deg,rgba(0,212,255,.15),transparent 40%,transparent 60%,rgba(0,102,255,.1)) border-box;-webkit-mask:linear-gradient(#fff 0 0) padding-box,linear-gradient(#fff 0 0);-webkit-mask-composite:destination-out;mask-composite:exclude;pointer-events:none;animation:cardShimmer 4s ease-in-out infinite alternate}
+        @keyframes cardEdgeBreath{0%{border-color:rgba(0,212,255,.2);box-shadow:0 0 8px rgba(0,212,255,.1),inset 0 0 6px rgba(0,212,255,.02)}100%{border-color:rgba(0,212,255,.45);box-shadow:0 0 18px rgba(0,212,255,.2),inset 0 0 12px rgba(0,212,255,.05)}}
+        @keyframes cardShimmer{0%{opacity:.4}100%{opacity:1}}
+        .water-ripple{position:absolute;border-radius:50%;background:radial-gradient(circle,rgba(0,212,255,.35) 0%,rgba(0,212,255,.12) 40%,transparent 70%);transform:scale(0);pointer-events:none;animation:waterRipple .9s cubic-bezier(.2,.8,.4,1) forwards;will-change:transform,opacity}
         @keyframes waterRipple{0%{transform:scale(0);opacity:.9}60%{opacity:.4}100%{transform:scale(3.5);opacity:0}}
 
         /* Body Weight */
