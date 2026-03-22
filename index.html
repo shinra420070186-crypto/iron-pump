@@ -18,6 +18,7 @@
     <style>
         :root{--void:#0a0a0f;--graphite:#12121a;--panel:#1f1f2e;--surface:#252532;--hover:#2a2a3a;--text1:#fff;--text2:rgba(255,255,255,.7);--text3:rgba(255,255,255,.5);--text4:rgba(255,255,255,.3);--cyan:#00d4ff;--blue:#0066ff;--violet:#6b5eff;--green:#00ff88;--amber:#ffaa00;--red:#ff4466;--gcyan:linear-gradient(135deg,#00d4ff,#0066ff);--gviolet:linear-gradient(135deg,#6b5eff,#4433dd);--gamber:linear-gradient(135deg,#ffaa00,#ff6600);--ggreen:linear-gradient(135deg,#00ff88,#00cc66);--glass:rgba(26,26,36,.8);--border:rgba(255,255,255,.08);--font:'Space Grotesk',-apple-system,sans-serif;--mono:'JetBrains Mono','SF Mono',monospace;--angle:0deg}
         @property --angle{syntax:'<angle>';initial-value:0deg;inherits:false}
+        @property --border-angle{syntax:'<angle>';initial-value:0deg;inherits:false}
         *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-backface-visibility:hidden;backface-visibility:hidden}
         html{font-size:16px;-webkit-font-smoothing:antialiased;overscroll-behavior-y:none;-webkit-overflow-scrolling:touch}
         body{font-family:var(--font);background:var(--void);color:var(--text1);line-height:1.5;min-height:100vh;min-height:100dvh;overflow-x:hidden;overscroll-behavior-y:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;transform:translateZ(0);-webkit-transform:translateZ(0)}
@@ -43,8 +44,8 @@
         .app.loaded{opacity:1;transform:translateY(0)}
 
         .header{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:14px 20px;background:linear-gradient(180deg,var(--void) 60%,transparent);backdrop-filter:blur(20px);will-change:transform}
-        .header::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1.5px;background:linear-gradient(90deg,transparent 0%,transparent 30%,var(--cyan) 50%,var(--blue) 60%,transparent 80%,transparent 100%);background-size:200% 100%;animation:headerSpot 4s ease-in-out infinite alternate;will-change:background-position,filter;filter:drop-shadow(0 0 3px var(--cyan))}
-        @keyframes headerSpot{0%{background-position:0% 0}100%{background-position:100% 0}}
+        .header::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--blue),var(--cyan),rgba(255,255,255,.4),var(--cyan),var(--blue));background-size:300% 100%;animation:meshFlow 5s ease-in-out infinite alternate;filter:drop-shadow(0 0 4px var(--cyan));will-change:background-position}
+        @keyframes meshFlow{0%{background-position:0% 0}100%{background-position:100% 0}}
         .logo{display:flex;align-items:center;gap:8px}
         .logo-icon{width:28px;height:28px;color:var(--cyan);filter:drop-shadow(0 0 10px var(--cyan))}
         .logo-text{font-size:1.15rem;font-weight:700;letter-spacing:.1em}
@@ -164,9 +165,8 @@
 
         /* Day Card Glow + Glass Edge */
         .day-card{box-shadow:0 0 20px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.08);will-change:transform}
-        .day-card::before{content:'';position:absolute;inset:-1px;border-radius:19px;padding:1px;background:conic-gradient(from var(--border-angle,0deg) at 50% 50%,transparent 0deg,transparent 60deg,var(--cyan) 120deg,var(--blue) 180deg,var(--cyan) 240deg,transparent 300deg,transparent 360deg);-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none;animation:borderSpin 4s linear infinite;will-change:--border-angle;filter:drop-shadow(0 0 4px var(--cyan))}
-        @property --border-angle{syntax:'<angle>';initial-value:0deg;inherits:false}
-        @keyframes borderSpin{to{--border-angle:360deg}}
+        .day-card::before{content:'';position:absolute;inset:-1px;border-radius:19px;padding:1.5px;background:linear-gradient(var(--border-angle,135deg),var(--cyan),var(--blue),rgba(255,255,255,.3),var(--blue),var(--cyan));-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none;animation:meshSpin 6s linear infinite;filter:drop-shadow(0 0 6px var(--cyan)) drop-shadow(0 0 2px var(--blue))}
+        @keyframes meshSpin{0%{--border-angle:0deg}100%{--border-angle:360deg}}
         .water-ripple{position:absolute;border-radius:50%;background:radial-gradient(circle,rgba(0,212,255,.35) 0%,rgba(0,212,255,.12) 40%,transparent 70%);transform:scale(0);pointer-events:none;animation:waterRipple .9s cubic-bezier(.2,.8,.4,1) forwards;will-change:transform,opacity}
         @keyframes waterRipple{0%{transform:scale(0);opacity:.9}60%{opacity:.4}100%{transform:scale(3.5);opacity:0}}
 
