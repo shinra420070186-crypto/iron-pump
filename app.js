@@ -324,7 +324,7 @@ class IronPump {
                 <div class="ex-actions">
                     <button class="action-btn btn-add" id="addSetBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Next Set</button>
                     ${canFinish?`<button class="action-btn btn-finish-ex" id="finishExBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Finish Exercise</button>`:''}
-                    <button class="action-btn btn-skip-ex" id="skipBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg>${canFinish?'Skip Remaining':'Skip Exercise'}</button>
+                    ${!canFinish?`<button class="action-btn btn-skip-ex" id="skipBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg>Skip Exercise</button>`:''}
                 </div>
             </div></div>`;
 
@@ -372,16 +372,12 @@ class IronPump {
             setTimeout(()=>this.renderEx(),260);
         });
 
-        document.getElementById('skipBtn').addEventListener('click',()=>{
+        const skipEl=document.getElementById('skipBtn');
+        if(skipEl)skipEl.addEventListener('click',()=>{
             syncCurrent();
-            if(!canFinish){ex.skipped=true;ex.completed=true;}
-            else{
-                ex.completed=true;
-                ex.sets.forEach((s,i)=>{const w=parseFloat(s.weight),r=parseFloat(s.reps);if(w>0&&r>0)this.saveSetPR(ex.name,i,w,r);});
-            }
+            ex.skipped=true;ex.completed=true;
             this.exIndex++;this.updateHeader();this.updateLive();
             this.sound.play('skip');this.vib(15);
-            if(canFinish)this.startRestTimer();
             setTimeout(()=>this.renderEx(),260);
         });
 
@@ -455,9 +451,6 @@ class IronPump {
         }
     }
 
-    getPR(exName){return this.prRecords[exName]||null;}
-    savePR(exName,weight,reps){this.prRecords[exName]={weight,reps,date:new Date().toISOString()};localStorage.setItem('ip_prs',JSON.stringify(this.prRecords));}
-
     // ─── Rest Timer ───
     setupRest(){
         document.getElementById('restSkip').addEventListener('click',()=>{this.stopRest();this.sound.play('tap')});
@@ -489,7 +482,7 @@ class IronPump {
             if(!confirm('End workout and save progress?'))return;
             this.finishWorkout();this.sound.play('complete');this.vib(30);
         });
-    }}
+    }
 
     finishWorkout(){
         if(!this.workout)return;if(this.timerInt)clearInterval(this.timerInt);this.stopRest();
@@ -616,15 +609,25 @@ class IronPump {
             const exDetails=wo.exercises?wo.exercises.filter(e=>e.completed&&!e.skipped).map(ex=>{
                 const sets=ex.sets?ex.sets.filter(s=>parseFloat(s.weight)>0&&parseFloat(s.reps)>0):[];
                 if(sets.length===0)return '';
-                return `<div class="hist-ex-row"><span class="hist-ex-name">${ex.name}</span><span class="hist-ex-sets">${sets.map(s=>`${s.weight}kg×${s.reps}`).join(', ')}</span></div>`;
+                return `<div class="hist-ex-row"><span class="hist-ex-name">${ex.name}</span><span class="hist-ex-sets">${sets.map(s=>`${s.weight}kg×${s.reps}`).join(' · ')}</span></div>`;
             }).join(''):'';
-            return `<div class="history-card" data-idx="${i}" style="animation:popIn .3s ease ${i*.05}s both">
+            const vol=Math.round(wo.totalVolume||0).toLocaleString();
+            const sets=wo.totalSets||0;
+            const dur=wo.duration||0;
+            return `<div class="history-card" style="animation:popIn .3s ease ${i*.06}s both">
                 <div class="history-top" onclick="this.closest('.history-card').classList.toggle('expanded')">
-                    <div><span class="history-split">${wo.splitName||wo.dayName}</span><span class="history-date">${ds}</span></div>
+                    <div>
+                        <span class="history-split">${wo.splitName||wo.dayName}</span>
+                        <span class="history-date">${ds}</span>
+                    </div>
                     <svg class="hist-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
                 </div>
-                <div class="history-stats"><span class="history-stat">Vol: <span>${Math.round(wo.totalVolume||0).toLocaleString()} kg</span></span><span class="history-stat">Sets: <span>${wo.totalSets||0}</span></span><span class="history-stat">Time: <span>${wo.duration||0}m</span></span></div>
-                <div class="hist-details">${exDetails}</div>
+                <div class="history-stats">
+                    <div class="hist-stat-pill"><span class="hist-stat-icon">⚡</span><span>${vol} kg</span></div>
+                    <div class="hist-stat-pill"><span class="hist-stat-icon">📦</span><span>${sets} sets</span></div>
+                    <div class="hist-stat-pill"><span class="hist-stat-icon">⏱</span><span>${dur}m</span></div>
+                </div>
+                <div class="hist-details">${exDetails||'<span style="font-size:.78rem;color:var(--text4)">No exercise data</span>'}</div>
             </div>`;
         }).join('');
     }
@@ -634,8 +637,6 @@ class IronPump {
         const container=document.getElementById('progressList');
         if(!container)return;
         const prs=JSON.parse(localStorage.getItem('ip_prs')||'{}');
-
-        // Group by exercise name
         const exercises={};
         Object.entries(prs).forEach(([key,val])=>{
             const match=key.match(/^(.+)__set(\d+)$/);
@@ -651,28 +652,30 @@ class IronPump {
         }
 
         container.innerHTML=Object.entries(exercises).map(([name,sets],i)=>{
-            // find best set for 1RM
             let best1RM=0;
             const setsHtml=sets.filter(Boolean).map((s,si)=>{
                 const oneRM=epley1RM(s.weight,s.reps);
                 if(oneRM>best1RM)best1RM=oneRM;
                 const d=new Date(s.date);
                 const ds=d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'2-digit'});
-                return `<div class="pr-set-row">
-                    <span class="pr-set-num">Set ${si+1}</span>
-                    <span class="pr-set-val">${s.weight} kg × ${s.reps}</span>
-                    <span class="pr-set-1rm">~${oneRM} kg 1RM</span>
+                return `<div class="pr-set-row" style="animation:popIn .25s ease ${si*.05}s both">
+                    <span class="pr-set-num">S${si+1}</span>
+                    <span class="pr-set-val">${s.weight}kg × ${s.reps}</span>
+                    <span class="pr-set-1rm">~${oneRM}kg</span>
                     <span class="pr-set-date">${ds}</span>
                 </div>`;
             }).join('');
 
-            return `<div class="pr-ex-card" style="animation:popIn .3s ease ${i*.05}s both">
+            return `<div class="pr-ex-card" style="animation:popIn .3s ease ${i*.06}s both">
                 <div class="pr-ex-header">
                     <div>
                         <span class="pr-ex-name">${name}</span>
                         <span class="pr-ex-1rm">Est. 1RM: ${best1RM} kg</span>
                     </div>
-                    <span class="pr-ex-badge">🏆</span>
+                    <div class="pr-ex-badge-wrap">
+                        <span class="pr-ex-badge">🏆</span>
+                        <span class="pr-ex-sets-count">${sets.filter(Boolean).length} set${sets.filter(Boolean).length>1?'s':''}</span>
+                    </div>
                 </div>
                 <div class="pr-sets-list">${setsHtml}</div>
             </div>`;
