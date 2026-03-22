@@ -164,8 +164,8 @@
 
 
         /* Day Card Glow + Glass Edge */
-        .day-card{box-shadow:0 0 16px rgba(0,212,255,.12),inset 0 1px 0 rgba(255,255,255,.06)}
-        .day-card::before{content:'';position:absolute;inset:-80px;border-radius:50%;background:conic-gradient(var(--blue) 0deg,var(--cyan) 40deg,rgba(255,255,255,.6) 60deg,var(--cyan) 80deg,var(--blue) 140deg,var(--cyan) 200deg,rgba(255,255,255,.3) 220deg,var(--cyan) 250deg,var(--blue) 320deg,var(--cyan) 350deg,var(--blue) 360deg);animation:borderRotate 5s linear infinite;pointer-events:none;z-index:0;transform:translateZ(0);will-change:transform}
+        .day-card{box-shadow:0 0 20px rgba(0,212,255,.15),0 0 40px rgba(0,212,255,.05),inset 0 1px 0 rgba(255,255,255,.08)}
+        .day-card::before{content:'';position:absolute;inset:-80px;border-radius:50%;background:conic-gradient(var(--blue) 0deg,var(--cyan) 30deg,rgba(255,255,255,.9) 50deg,var(--cyan) 70deg,var(--blue) 120deg,transparent 160deg,var(--blue) 200deg,var(--cyan) 230deg,rgba(255,255,255,.6) 250deg,var(--cyan) 270deg,var(--blue) 320deg,transparent 350deg,var(--blue) 360deg);animation:borderRotate 4s linear infinite;pointer-events:none;z-index:0;transform:translateZ(0);will-change:transform;filter:blur(.5px) brightness(1.3)}
         .day-card::after{content:'';position:absolute;inset:1.5px;border-radius:17px;background:linear-gradient(135deg,rgba(31,31,46,.96) 0%,rgba(18,18,26,.98) 100%);z-index:1;pointer-events:none}
         .day-left,.day-arrow,.day-num,.day-sub,.day-count{position:relative;z-index:2}
         @keyframes borderRotate{to{transform:rotate(360deg) translateZ(0)}}
