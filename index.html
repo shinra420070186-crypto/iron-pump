@@ -42,7 +42,8 @@
         .app.loaded{opacity:1;transform:translateY(0)}
 
         .header{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:14px 20px;background:linear-gradient(180deg,var(--void) 60%,transparent);backdrop-filter:blur(20px)}
-        .header::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--cyan),rgba(0,102,255,.6),var(--cyan),transparent);box-shadow:0 0 12px rgba(0,212,255,.4),0 0 4px rgba(0,212,255,.3)}
+        .header::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--cyan),rgba(0,102,255,.6),var(--cyan),transparent);background-size:200% 100%;animation:glowMove 3s linear infinite;box-shadow:0 0 10px rgba(0,212,255,.3)}
+        @keyframes glowMove{0%{background-position:100% 0}100%{background-position:-100% 0}}
         .logo{display:flex;align-items:center;gap:8px}
         .logo-icon{width:28px;height:28px;color:var(--cyan);filter:drop-shadow(0 0 10px var(--cyan))}
         .logo-text{font-size:1.15rem;font-weight:700;letter-spacing:.1em}
@@ -160,8 +161,9 @@
 
         /* Day Card Glow + Glass Edge */
         .day-card{box-shadow:0 0 18px rgba(0,212,255,.12),0 0 6px rgba(0,212,255,.08),inset 0 1px 0 rgba(255,255,255,.08)}
-        .day-card::before{content:'';position:absolute;inset:0;border-radius:18px;padding:1px;background:linear-gradient(135deg,rgba(0,212,255,.6),rgba(0,102,255,.3),rgba(0,212,255,.1));-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask-composite:exclude;opacity:.8;transition:opacity .4s}
+        .day-card::before{content:'';position:absolute;inset:0;border-radius:18px;padding:1px;background:linear-gradient(90deg,rgba(0,212,255,.1),rgba(0,212,255,.8),rgba(0,102,255,.5),rgba(0,212,255,.1));background-size:300% 100%;-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask-composite:exclude;animation:borderMove 3s linear infinite;opacity:.9;transition:opacity .4s}
         .day-card:hover::before,.day-card:active::before{opacity:1}
+        @keyframes borderMove{0%{background-position:0% 0}100%{background-position:300% 0}}
         .water-ripple{position:absolute;border-radius:50%;background:radial-gradient(circle,rgba(0,212,255,.35) 0%,rgba(0,212,255,.12) 40%,transparent 70%);transform:scale(0);pointer-events:none;animation:waterRipple .9s cubic-bezier(.2,.8,.4,1) forwards}
         @keyframes waterRipple{0%{transform:scale(0);opacity:.9}60%{opacity:.4}100%{transform:scale(3.5);opacity:0}}
 
@@ -401,7 +403,7 @@
     </div>
 
     <!-- Rest Timer -->
-    <div class="rest-overlay hidden" id="restOverlay"><div class="rest-content"><p class="rest-label">Rest Timer</p><div class="rest-ring"><svg viewBox="0 0 200 200"><circle cx="100" cy="100" r="90" class="rest-ring-bg"/><circle cx="100" cy="100" r="90" class="rest-ring-fill" id="restRingFill"/></svg><span class="rest-time" id="restTime">2:00</span></div><div class="rest-controls"><button class="rest-btn rest-skip" id="restSkip">Skip</button><button class="rest-btn rest-add" id="restAdd30">+30s</button></div></div></div>
+    <div class="rest-overlay hidden" id="restOverlay"><div class="rest-content"><p class="rest-label">Rest Timer</p><div class="rest-ring"><svg viewBox="0 0 200 200"><circle cx="100" cy="100" r="90" class="rest-ring-fill" id="restRingFill"/></svg><span class="rest-time" id="restTime">2:00</span></div><div class="rest-controls"><button class="rest-btn rest-skip" id="restSkip">Skip</button><button class="rest-btn rest-add" id="restAdd30">+30s</button></div></div></div>
 
     <!-- Workout Complete -->
     <div class="complete-overlay hidden" id="completeOverlay"><div class="complete-content"><div class="complete-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div><h2>Workout Complete!</h2><p>Great session. Keep pushing.</p><div class="complete-stats"><div class="complete-stat"><span class="complete-stat-val" id="compVol">0</span><span class="complete-stat-lbl">Volume (kg)</span></div><div class="complete-stat"><span class="complete-stat-val" id="compSets">0</span><span class="complete-stat-lbl">Sets</span></div><div class="complete-stat"><span class="complete-stat-val" id="compTime">0</span><span class="complete-stat-lbl">Minutes</span></div></div><button class="complete-close" id="compClose">Done</button></div></div>
