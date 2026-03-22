@@ -479,9 +479,21 @@ class IronPump {
         document.getElementById('compClose').addEventListener('click',()=>{document.getElementById('completeOverlay').classList.add('hidden');this.sound.play('tap')});
         document.getElementById('woFinish').addEventListener('click',()=>{
             if(!this.workout)return;
-            if(!confirm('End workout and save progress?'))return;
-            this.finishWorkout();this.sound.play('complete');this.vib(30);
+            this.showConfirm();
         });
+        document.getElementById('confirmCancel').addEventListener('click',()=>{
+            document.getElementById('confirmOverlay').classList.add('hidden');
+            this.sound.play('tap');
+        });
+        document.getElementById('confirmOk').addEventListener('click',()=>{
+            document.getElementById('confirmOverlay').classList.add('hidden');
+            this.finishWorkout();
+        });
+    }
+
+    showConfirm(){
+        document.getElementById('confirmOverlay').classList.remove('hidden');
+        this.sound.play('tap');this.vib(10);
     }
 
     finishWorkout(){
@@ -658,7 +670,7 @@ class IronPump {
                 if(oneRM>best1RM)best1RM=oneRM;
                 const d=new Date(s.date);
                 const ds=d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'2-digit'});
-                return `<div class="pr-set-row" style="animation:popIn .25s ease ${si*.05}s both">
+                return `<div class="pr-set-row">
                     <span class="pr-set-num">S${si+1}</span>
                     <span class="pr-set-val">${s.weight}kg × ${s.reps}</span>
                     <span class="pr-set-1rm">~${oneRM}kg</span>
@@ -667,14 +679,17 @@ class IronPump {
             }).join('');
 
             return `<div class="pr-ex-card" style="animation:popIn .3s ease ${i*.06}s both">
-                <div class="pr-ex-header">
-                    <div>
+                <div class="pr-ex-header" onclick="this.closest('.pr-ex-card').classList.toggle('expanded')">
+                    <div class="pr-ex-header-left">
                         <span class="pr-ex-name">${name}</span>
                         <span class="pr-ex-1rm">Est. 1RM: ${best1RM} kg</span>
                     </div>
-                    <div class="pr-ex-badge-wrap">
-                        <span class="pr-ex-badge">🏆</span>
-                        <span class="pr-ex-sets-count">${sets.filter(Boolean).length} set${sets.filter(Boolean).length>1?'s':''}</span>
+                    <div style="display:flex;align-items:center;gap:8px">
+                        <div class="pr-ex-badge-wrap">
+                            <span class="pr-ex-badge">🏆</span>
+                            <span class="pr-ex-sets-count">${sets.filter(Boolean).length} set${sets.filter(Boolean).length>1?'s':''}</span>
+                        </div>
+                        <svg class="pr-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
                     </div>
                 </div>
                 <div class="pr-sets-list">${setsHtml}</div>
