@@ -43,8 +43,8 @@
         .app.loaded{opacity:1;transform:translateY(0)}
 
         .header{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:14px 20px;background:linear-gradient(180deg,var(--void) 60%,transparent);backdrop-filter:blur(20px);will-change:transform}
-        .header::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1.5px;background:linear-gradient(90deg,transparent,var(--cyan),var(--blue),var(--cyan),transparent);animation:headerBreath 3s ease-in-out infinite alternate;will-change:opacity,filter}
-        @keyframes headerBreath{0%{opacity:.35;filter:brightness(.8);box-shadow:0 0 4px var(--cyan)}100%{opacity:1;filter:brightness(1.4);box-shadow:0 0 14px var(--cyan),0 0 6px var(--blue)}}
+        .header::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1.5px;background:linear-gradient(90deg,transparent 0%,transparent 30%,var(--cyan) 50%,var(--blue) 60%,transparent 80%,transparent 100%);background-size:200% 100%;animation:headerSpot 4s ease-in-out infinite alternate;will-change:background-position,filter;filter:drop-shadow(0 0 3px var(--cyan))}
+        @keyframes headerSpot{0%{background-position:0% 0}100%{background-position:100% 0}}
         .logo{display:flex;align-items:center;gap:8px}
         .logo-icon{width:28px;height:28px;color:var(--cyan);filter:drop-shadow(0 0 10px var(--cyan))}
         .logo-text{font-size:1.15rem;font-weight:700;letter-spacing:.1em}
@@ -161,10 +161,12 @@
         .set-glass-divider{width:1px;height:60px;background:linear-gradient(to bottom,transparent,rgba(255,255,255,.1),transparent)}
 
 
+
         /* Day Card Glow + Glass Edge */
         .day-card{box-shadow:0 0 20px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.08);will-change:transform}
-        .day-card::before{content:'';position:absolute;inset:0;border-radius:18px;padding:1px;background:linear-gradient(135deg,var(--cyan),var(--blue),var(--cyan));-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none;animation:cardBreath 3s ease-in-out infinite alternate;will-change:opacity,filter}
-        @keyframes cardBreath{0%{opacity:.35;filter:brightness(.8) blur(0px)}100%{opacity:1;filter:brightness(1.4) blur(.3px)}}
+        .day-card::before{content:'';position:absolute;inset:-1px;border-radius:19px;padding:1px;background:conic-gradient(from var(--border-angle,0deg) at 50% 50%,transparent 0deg,transparent 60deg,var(--cyan) 120deg,var(--blue) 180deg,var(--cyan) 240deg,transparent 300deg,transparent 360deg);-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none;animation:borderSpin 4s linear infinite;will-change:--border-angle;filter:drop-shadow(0 0 4px var(--cyan))}
+        @property --border-angle{syntax:'<angle>';initial-value:0deg;inherits:false}
+        @keyframes borderSpin{to{--border-angle:360deg}}
         .water-ripple{position:absolute;border-radius:50%;background:radial-gradient(circle,rgba(0,212,255,.35) 0%,rgba(0,212,255,.12) 40%,transparent 70%);transform:scale(0);pointer-events:none;animation:waterRipple .9s cubic-bezier(.2,.8,.4,1) forwards;will-change:transform,opacity}
         @keyframes waterRipple{0%{transform:scale(0);opacity:.9}60%{opacity:.4}100%{transform:scale(3.5);opacity:0}}
 
