@@ -16,7 +16,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        :root{--void:#0a0a0f;--graphite:#12121a;--panel:#1f1f2e;--surface:#252532;--hover:#2a2a3a;--text1:#fff;--text2:rgba(255,255,255,.7);--text3:rgba(255,255,255,.5);--text4:rgba(255,255,255,.3);--cyan:#00d4ff;--blue:#0066ff;--violet:#6b5eff;--green:#00ff88;--amber:#ffaa00;--red:#ff4466;--gcyan:linear-gradient(135deg,#00d4ff,#0066ff);--gviolet:linear-gradient(135deg,#6b5eff,#4433dd);--gamber:linear-gradient(135deg,#ffaa00,#ff6600);--ggreen:linear-gradient(135deg,#00ff88,#00cc66);--glass:rgba(26,26,36,.8);--border:rgba(255,255,255,.08);--font:'Space Grotesk',-apple-system,sans-serif;--mono:'JetBrains Mono','SF Mono',monospace}
+        :root{--void:#0a0a0f;--graphite:#12121a;--panel:#1f1f2e;--surface:#252532;--hover:#2a2a3a;--text1:#fff;--text2:rgba(255,255,255,.7);--text3:rgba(255,255,255,.5);--text4:rgba(255,255,255,.3);--cyan:#00d4ff;--blue:#0066ff;--violet:#6b5eff;--green:#00ff88;--amber:#ffaa00;--red:#ff4466;--gcyan:linear-gradient(135deg,#00d4ff,#0066ff);--gviolet:linear-gradient(135deg,#6b5eff,#4433dd);--gamber:linear-gradient(135deg,#ffaa00,#ff6600);--ggreen:linear-gradient(135deg,#00ff88,#00cc66);--glass:rgba(26,26,36,.8);--border:rgba(255,255,255,.08);--font:'Space Grotesk',-apple-system,sans-serif;--mono:'JetBrains Mono','SF Mono',monospace;--angle:0deg}
+        @property --angle{syntax:'<angle>';initial-value:0deg;inherits:false}
         *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
         html{font-size:16px;-webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
         body{font-family:var(--font);background:var(--void);color:var(--text1);line-height:1.5;min-height:100vh;min-height:100dvh;overflow-x:hidden;overscroll-behavior-y:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
@@ -28,12 +29,12 @@
 
         .loading-screen{position:fixed;inset:0;background:var(--void);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;transition:opacity .6s,visibility .6s}
         .loading-screen.hidden{opacity:0;visibility:hidden;pointer-events:none}
-        .loading-logo{position:relative;width:120px;height:120px;margin:0 auto 24px;background:none}
-        .loading-ring{width:100%;height:100%;transform:rotate(-90deg)}
-        .loading-ring-bg{fill:none;stroke:var(--panel);stroke-width:4}
-        .loading-ring-fill{fill:none;stroke:var(--cyan);stroke-width:4;stroke-linecap:round;stroke-dasharray:283;stroke-dashoffset:283;animation:lp 2s ease-out forwards,lg 2s ease-in-out infinite}
+        .loading-logo{position:relative;width:120px;height:120px;margin:0 auto 24px}
+        .loading-ring{width:100%;height:100%;transform:rotate(-90deg);overflow:visible}
+        .loading-ring-bg{fill:none;stroke:transparent;stroke-width:4}
+        .loading-ring-fill{fill:none;stroke:var(--cyan);stroke-width:4;stroke-linecap:round;stroke-dasharray:283;stroke-dashoffset:283;animation:lp 2s ease-out forwards,lg 2s ease-in-out infinite;filter:drop-shadow(0 0 6px var(--cyan))}
         @keyframes lp{to{stroke-dashoffset:0}}
-        @keyframes lg{0%,100%{filter:drop-shadow(0 0 8px var(--cyan))}50%{filter:drop-shadow(0 0 20px var(--cyan))}}
+        @keyframes lg{0%,100%{filter:drop-shadow(0 0 6px var(--cyan))}50%{filter:drop-shadow(0 0 18px var(--cyan))}}
         .loading-text{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:1.1rem;font-weight:700;letter-spacing:.2em;color:var(--cyan);text-shadow:0 0 20px var(--cyan)}
         .loading-status{text-align:center;font-size:.85rem;color:var(--text3);animation:pulse 1.5s ease-in-out infinite}
         @keyframes pulse{0%,100%{opacity:.5}50%{opacity:1}}
@@ -42,8 +43,8 @@
         .app.loaded{opacity:1;transform:translateY(0)}
 
         .header{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:14px 20px;background:linear-gradient(180deg,var(--void) 60%,transparent);backdrop-filter:blur(20px)}
-        .header::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--cyan),rgba(0,102,255,.6),var(--cyan),transparent);background-size:200% 100%;animation:glowMove 3s linear infinite;box-shadow:0 0 10px rgba(0,212,255,.3)}
-        @keyframes glowMove{0%{background-position:100% 0}100%{background-position:-100% 0}}
+        .header::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent 0%,transparent 20%,var(--cyan) 50%,transparent 80%,transparent 100%);background-size:200% 100%;animation:headerGlow 4s ease-in-out infinite alternate;box-shadow:0 0 8px rgba(0,212,255,.25)}
+        @keyframes headerGlow{0%{background-position:0% 0}100%{background-position:200% 0}}
         .logo{display:flex;align-items:center;gap:8px}
         .logo-icon{width:28px;height:28px;color:var(--cyan);filter:drop-shadow(0 0 10px var(--cyan))}
         .logo-text{font-size:1.15rem;font-weight:700;letter-spacing:.1em}
@@ -160,10 +161,10 @@
         .set-glass-divider{width:1px;height:60px;background:linear-gradient(to bottom,transparent,rgba(255,255,255,.1),transparent)}
 
         /* Day Card Glow + Glass Edge */
-        .day-card{box-shadow:0 0 18px rgba(0,212,255,.12),0 0 6px rgba(0,212,255,.08),inset 0 1px 0 rgba(255,255,255,.08)}
-        .day-card::before{content:'';position:absolute;inset:0;border-radius:18px;padding:1px;background:linear-gradient(90deg,rgba(0,212,255,.1),rgba(0,212,255,.8),rgba(0,102,255,.5),rgba(0,212,255,.1));background-size:300% 100%;-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask-composite:exclude;animation:borderMove 3s linear infinite;opacity:.9;transition:opacity .4s}
+        .day-card{box-shadow:0 0 18px rgba(0,212,255,.1),0 0 6px rgba(0,212,255,.06),inset 0 1px 0 rgba(255,255,255,.08)}
+        .day-card::before{content:'';position:absolute;inset:0;border-radius:18px;padding:1px;background:conic-gradient(from var(--angle,0deg),transparent 20%,var(--cyan) 40%,rgba(0,102,255,.8) 50%,var(--cyan) 60%,transparent 80%);-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask-composite:exclude;opacity:.85;transition:opacity .4s;animation:borderRotate 6s linear infinite}
         .day-card:hover::before,.day-card:active::before{opacity:1}
-        @keyframes borderMove{0%{background-position:0% 0}100%{background-position:300% 0}}
+        @keyframes borderRotate{from{--angle:0deg}to{--angle:360deg}}
         .water-ripple{position:absolute;border-radius:50%;background:radial-gradient(circle,rgba(0,212,255,.35) 0%,rgba(0,212,255,.12) 40%,transparent 70%);transform:scale(0);pointer-events:none;animation:waterRipple .9s cubic-bezier(.2,.8,.4,1) forwards}
         @keyframes waterRipple{0%{transform:scale(0);opacity:.9}60%{opacity:.4}100%{transform:scale(3.5);opacity:0}}
 
@@ -281,9 +282,9 @@
         .rest-overlay.hidden{display:none}
         .rest-content{text-align:center;background:none;padding:0}
         .rest-ring{width:210px;height:210px;margin:0 auto 24px;position:relative}
-        .rest-ring svg{width:100%;height:100%;transform:rotate(-90deg)}
-        .rest-ring-bg{fill:none;stroke:var(--panel);stroke-width:8}
-        .rest-ring-fill{fill:none;stroke:var(--cyan);stroke-width:8;stroke-linecap:round;stroke-dasharray:565;transition:stroke-dashoffset .3s linear;filter:drop-shadow(0 0 15px rgba(0,212,255,.5))}
+        .rest-ring svg{width:100%;height:100%;transform:rotate(-90deg);overflow:visible}
+        .rest-ring-bg{fill:none;stroke:transparent;stroke-width:8}
+        .rest-ring-fill{fill:none;stroke:var(--cyan);stroke-width:8;stroke-linecap:round;stroke-dasharray:565;transition:stroke-dashoffset .3s linear;filter:drop-shadow(0 0 12px rgba(0,212,255,.6))}
         .rest-time{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-family:var(--mono);font-size:3.2rem;font-weight:700;color:var(--cyan);text-shadow:0 0 30px var(--cyan)}
         .rest-label{font-size:1.1rem;color:var(--text2);margin-bottom:24px;font-weight:500}
         .rest-controls{display:flex;gap:12px;justify-content:center}
