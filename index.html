@@ -282,17 +282,16 @@
 
         /* History */
         .history-list{display:flex;flex-direction:column;gap:12px}
-        .history-card{padding:16px;background:linear-gradient(135deg,rgba(31,31,46,.88) 0%,rgba(18,18,26,.94) 100%);border:1px solid rgba(255,255,255,.09);border-radius:16px;backdrop-filter:blur(20px);box-shadow:inset 0 1px 0 rgba(255,255,255,.07);transition:opacity .2s}
-        .history-card:active{opacity:.85}
+        .history-card{padding:16px;background:linear-gradient(135deg,rgba(31,31,46,.88) 0%,rgba(18,18,26,.94) 100%);border:1px solid rgba(255,255,255,.09);border-radius:16px;backdrop-filter:blur(20px);box-shadow:inset 0 1px 0 rgba(255,255,255,.07)}
         .history-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;cursor:pointer}
         .history-split{font-size:.9rem;font-weight:600;display:block;margin-bottom:3px}
         .history-date{font-size:.72rem;color:var(--text3)}
         .history-stats{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:0}
         .hist-stat-pill{display:flex;align-items:center;gap:5px;padding:5px 10px;background:rgba(255,255,255,.05);border-radius:999px;font-size:.75rem;font-family:var(--mono);font-weight:600;color:var(--text2);border:1px solid rgba(255,255,255,.07)}
         .hist-stat-icon{font-size:.7rem}
-        .hist-chevron{width:16px;height:16px;color:var(--text4);transition:transform .3s ease;flex-shrink:0}
+        .hist-chevron{width:16px;height:16px;color:var(--text4);transition:transform .3s ease;flex-shrink:0;will-change:transform}
         .history-card.expanded .hist-chevron{transform:rotate(180deg)}
-        .hist-details{max-height:0;overflow:hidden;transition:max-height .4s ease,opacity .4s ease;opacity:0}
+        .hist-details{max-height:0;overflow:hidden;transition:max-height .35s ease,opacity .3s ease;opacity:0;will-change:max-height,opacity}
         .history-card.expanded .hist-details{max-height:600px;opacity:1;margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,.06)}
         .hist-ex-row{display:flex;flex-direction:column;gap:3px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04)}
         .hist-ex-row:last-child{border-bottom:none}
@@ -301,8 +300,7 @@
         .no-history{text-align:center;padding:50px 20px;color:var(--text3)}
 
         /* Progress Page */
-        .pr-ex-card{background:linear-gradient(135deg,rgba(31,31,46,.88) 0%,rgba(18,18,26,.94) 100%);border:1px solid rgba(255,255,255,.09);border-radius:16px;padding:18px;margin-bottom:14px;backdrop-filter:blur(20px);box-shadow:inset 0 1px 0 rgba(255,255,255,.07);transition:opacity .2s}
-        .pr-ex-card:active{opacity:.85}
+        .pr-ex-card{background:linear-gradient(135deg,rgba(31,31,46,.88) 0%,rgba(18,18,26,.94) 100%);border:1px solid rgba(255,255,255,.09);border-radius:16px;padding:18px;margin-bottom:14px;backdrop-filter:blur(20px);box-shadow:inset 0 1px 0 rgba(255,255,255,.07)}
         .pr-ex-header{display:flex;justify-content:space-between;align-items:center;cursor:pointer}
         .pr-ex-header-left{flex:1}
         .pr-ex-name{font-size:.95rem;font-weight:700;display:block;margin-bottom:4px}
@@ -310,9 +308,9 @@
         .pr-ex-badge-wrap{display:flex;flex-direction:column;align-items:center;gap:4px}
         .pr-ex-badge{font-size:1.4rem}
         .pr-ex-sets-count{font-size:.6rem;color:var(--text4);font-family:var(--mono)}
-        .pr-chevron{width:16px;height:16px;color:var(--text4);transition:transform .3s ease;flex-shrink:0;margin-left:8px}
+        .pr-chevron{width:16px;height:16px;color:var(--text4);transition:transform .3s ease;flex-shrink:0;margin-left:8px;will-change:transform}
         .pr-ex-card.expanded .pr-chevron{transform:rotate(180deg)}
-        .pr-sets-list{max-height:0;overflow:hidden;transition:max-height .4s ease,opacity .4s ease;opacity:0;display:flex;flex-direction:column;gap:8px}
+        .pr-sets-list{max-height:0;overflow:hidden;transition:max-height .35s ease,opacity .3s ease;opacity:0;display:flex;flex-direction:column;gap:8px;will-change:max-height,opacity}
         .pr-ex-card.expanded .pr-sets-list{max-height:600px;opacity:1;margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,.06)}
         .pr-set-row{display:grid;grid-template-columns:28px 1fr 64px 56px;align-items:center;gap:8px;padding:10px 12px;background:rgba(255,255,255,.04);border-radius:12px;border-left:2px solid var(--cyan)}
         .pr-set-num{font-family:var(--mono);font-size:.7rem;color:var(--cyan);font-weight:700}
@@ -351,6 +349,104 @@
         .btn-export{background:var(--gcyan);border:0;color:var(--void)}
         .btn-import{background:var(--panel);border:1.5px solid var(--border);color:var(--text2)}
 
+        /* ═══ ARENA ═══ */
+        /* Hero */
+        .arena-hero{background:linear-gradient(135deg,rgba(31,31,46,.95) 0%,rgba(18,18,26,.98) 100%);border:1px solid rgba(0,212,255,.2);border-radius:20px;padding:20px;margin-bottom:16px;box-shadow:0 0 30px rgba(0,212,255,.08),inset 0 1px 0 rgba(255,255,255,.08);position:relative;overflow:hidden}
+        .arena-hero::before{content:'';position:absolute;top:-40px;right:-40px;width:150px;height:150px;background:radial-gradient(circle,rgba(0,212,255,.08) 0%,transparent 70%);pointer-events:none}
+        .arena-hero-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px}
+        .arena-hero-rank-label{font-size:.6rem;color:var(--text4);letter-spacing:.15em;display:block;margin-bottom:2px}
+        .arena-hero-rank{font-size:1.6rem;font-weight:700;color:var(--cyan);text-shadow:0 0 20px rgba(0,212,255,.4);display:block;letter-spacing:.05em}
+        .arena-hero-stats{display:flex;gap:16px}
+        .arena-hero-stat{display:flex;flex-direction:column;align-items:center;gap:2px}
+        .arena-hero-stat-val{font-family:var(--mono);font-size:1.1rem;font-weight:700;color:var(--text1)}
+        .arena-hero-stat-lbl{font-size:.58rem;color:var(--text4);text-transform:uppercase;letter-spacing:.1em}
+        .arena-xp-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+        .arena-xp-label{font-size:.6rem;color:var(--text4);letter-spacing:.1em;font-weight:600;min-width:20px}
+        .arena-xp-bar-wrap{flex:1;height:6px;background:rgba(255,255,255,.08);border-radius:999px;overflow:hidden}
+        .arena-xp-bar{height:100%;background:var(--gcyan);border-radius:999px;transition:width .8s cubic-bezier(.4,0,.2,1);box-shadow:0 0 8px rgba(0,212,255,.4)}
+        .arena-xp-val{font-family:var(--mono);font-size:.68rem;color:var(--text3);white-space:nowrap}
+        .arena-status-line{font-size:.8rem;color:var(--text3);line-height:1.4}
+
+        /* Section labels */
+        .arena-section-label{font-size:.62rem;color:var(--text4);letter-spacing:.15em;font-weight:700;text-transform:uppercase;margin:20px 0 10px;padding-left:2px}
+
+        /* Split tracker */
+        .arena-split-tracker{display:flex;gap:8px;margin-bottom:4px}
+        .arena-split-day{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px}
+        .arena-split-dot{width:36px;height:36px;border-radius:50%;border:2px solid rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;font-size:.75rem;color:var(--text4);transition:all .3s ease}
+        .arena-split-day.done .arena-split-dot{background:var(--gcyan);border-color:var(--cyan);color:var(--void);font-weight:700;box-shadow:0 0 12px rgba(0,212,255,.3)}
+        .arena-split-label{font-size:.58rem;color:var(--text4);font-family:var(--mono)}
+        .arena-split-day.done .arena-split-label{color:var(--cyan)}
+
+        /* Missions */
+        .arena-missions{display:flex;flex-direction:column;gap:8px;margin-bottom:4px}
+        .arena-mission{display:flex;align-items:center;justify-content:space-between;padding:14px;background:linear-gradient(135deg,rgba(31,31,46,.85),rgba(18,18,26,.9));border:1px solid rgba(255,255,255,.07);border-radius:14px;transition:opacity .2s;gap:10px}
+        .arena-mission.done{opacity:.5}
+        .arena-mission.done .arena-mission-label{text-decoration:line-through}
+        .arena-mission-left{display:flex;align-items:center;gap:12px;flex:1}
+        .arena-mission-icon{font-size:1.2rem;flex-shrink:0}
+        .arena-mission-label{font-size:.85rem;font-weight:600;display:block;margin-bottom:2px}
+        .arena-mission-desc{font-size:.7rem;color:var(--text3);display:block}
+        .arena-mission-right{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0}
+        .arena-mission-xp{font-family:var(--mono);font-size:.72rem;color:var(--cyan);font-weight:600}
+        .arena-mission-check{font-size:.9rem;color:var(--green)}
+        .arena-claim-btn{padding:6px 12px;background:var(--gcyan);border:0;border-radius:8px;color:var(--void);font-family:var(--font);font-size:.72rem;font-weight:700;cursor:pointer;transition:transform .2s}
+        .arena-claim-btn:active{transform:scale(.93)}
+
+        /* Featured challenge */
+        .arena-featured-card{background:linear-gradient(135deg,rgba(0,212,255,.08),rgba(0,102,255,.06));border:1px solid rgba(0,212,255,.2);border-radius:16px;padding:18px;margin-bottom:4px;box-shadow:0 0 20px rgba(0,212,255,.06)}
+        .arena-featured-top{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+        .arena-featured-icon{font-size:1.6rem;flex-shrink:0}
+        .arena-featured-label{font-size:.95rem;font-weight:700;display:block;margin-bottom:2px}
+        .arena-featured-desc{font-size:.75rem;color:var(--text3);display:block}
+        .arena-featured-xp{font-family:var(--mono);font-size:.8rem;color:var(--cyan);font-weight:700;margin-left:auto;white-space:nowrap}
+        .arena-featured-progress{display:flex;align-items:center;gap:10px}
+        .arena-featured-bar{flex:1;height:8px;background:rgba(255,255,255,.08);border-radius:999px;overflow:hidden}
+        .arena-featured-fill{height:100%;background:var(--gcyan);border-radius:999px;transition:width .8s cubic-bezier(.4,0,.2,1);box-shadow:0 0 8px rgba(0,212,255,.3)}
+        .arena-featured-count{font-family:var(--mono);font-size:.72rem;color:var(--text3);white-space:nowrap}
+
+        /* Weekly challenges */
+        .arena-challenges{display:flex;flex-direction:column;gap:8px;margin-bottom:4px}
+        .arena-challenge{padding:14px;background:linear-gradient(135deg,rgba(31,31,46,.85),rgba(18,18,26,.9));border:1px solid rgba(255,255,255,.07);border-radius:14px}
+        .arena-challenge-top{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+        .arena-challenge-icon{font-size:1.1rem;flex-shrink:0}
+        .arena-challenge-info{flex:1}
+        .arena-challenge-label{font-size:.85rem;font-weight:600;display:block;margin-bottom:2px}
+        .arena-challenge-desc{font-size:.7rem;color:var(--text3);display:block}
+        .arena-challenge-xp{font-family:var(--mono);font-size:.72rem;color:var(--cyan);font-weight:600;white-space:nowrap}
+        .arena-bar-wrap{display:flex;align-items:center;gap:8px}
+        .arena-bar{flex:1;height:5px;background:rgba(255,255,255,.08);border-radius:999px;overflow:hidden}
+        .arena-bar-fill{height:100%;background:var(--gcyan);border-radius:999px;transition:width .8s cubic-bezier(.4,0,.2,1)}
+        .arena-bar-pct{font-family:var(--mono);font-size:.65rem;color:var(--text4);white-space:nowrap}
+
+        /* Badges */
+        .arena-badges-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:24px}
+        .arena-badge{padding:12px 8px;background:linear-gradient(135deg,rgba(31,31,46,.85),rgba(18,18,26,.9));border:1px solid rgba(255,255,255,.07);border-radius:14px;display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;transition:opacity .2s}
+        .arena-badge.locked{opacity:.4}
+        .arena-badge.unlocked{border-color:rgba(0,212,255,.2);box-shadow:0 0 10px rgba(0,212,255,.06)}
+        .arena-badge-icon{font-size:1.4rem}
+        .arena-badge-name{font-size:.65rem;font-weight:600;color:var(--text2);line-height:1.2}
+        .arena-badge-req{font-size:.55rem;color:var(--text4);display:none}
+
+        /* Arena reward overlay */
+        .arena-reward-overlay{position:fixed;inset:0;background:rgba(10,10,15,.9);z-index:250;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(12px);padding:20px;animation:fadeUp .3s ease}
+        .arena-reward-overlay.hidden{display:none}
+        .arena-reward-box{background:linear-gradient(135deg,rgba(31,31,46,.99),rgba(18,18,26,.99));border:1px solid rgba(0,212,255,.2);border-radius:20px;padding:24px;width:100%;max-width:340px;box-shadow:0 0 40px rgba(0,212,255,.1),inset 0 1px 0 rgba(255,255,255,.08)}
+        .arena-reward-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+        .arena-reward-title{font-size:.7rem;color:var(--text4);letter-spacing:.15em;font-weight:700}
+        .arena-reward-total{font-family:var(--mono);font-size:1.2rem;font-weight:700;color:var(--cyan);text-shadow:0 0 15px rgba(0,212,255,.4)}
+        .arena-reward-items{display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
+        .arena-reward-item{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:rgba(255,255,255,.04);border-radius:10px}
+        .arena-reward-label{font-size:.82rem;font-weight:500;color:var(--text2)}
+        .arena-reward-xp{font-family:var(--mono);font-size:.8rem;color:var(--cyan);font-weight:700}
+        .arena-reward-rank{font-size:.78rem;color:var(--text3);text-align:center;margin-bottom:4px}
+        .arena-reward-close{width:100%;padding:13px;background:var(--gcyan);border:0;border-radius:12px;color:var(--void);font-family:var(--font);font-size:.9rem;font-weight:700;cursor:pointer;transition:transform .2s;box-shadow:0 0 20px rgba(0,212,255,.2)}
+        .arena-reward-close:active{transform:scale(.96)}
+
+        /* Toast */
+        .arena-toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%) translateY(10px);background:rgba(0,212,255,.15);border:1px solid rgba(0,212,255,.3);border-radius:999px;padding:8px 20px;font-size:.8rem;font-weight:600;color:var(--cyan);opacity:0;transition:opacity .3s,transform .3s;pointer-events:none;z-index:400;white-space:nowrap}
+        .arena-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
         @media(max-width:400px){
             .hero-stats{grid-template-columns:1fr}
             .hero-card{flex-direction:row;gap:14px}
@@ -358,6 +454,7 @@
             .mgrid{grid-template-columns:1fr}
             .intel-extra-grid{grid-template-columns:1fr}
             .pr-set-row{grid-template-columns:40px 1fr 70px 56px}
+            .arena-badges-grid{grid-template-columns:repeat(2,1fr)}
         }
     </style>
 </head>
@@ -426,10 +523,52 @@
             </div>
         </div>
 
-        <!-- PROGRESS -->
-        <div class="page" id="page-progress">
-            <div class="section-header"><h2>Progress</h2><p>Your all-time personal records</p></div>
-            <div id="progressList"></div>
+        <!-- ARENA -->
+        <div class="page" id="page-arena">
+            <div class="section-header"><h2>Arena</h2><p>Your performance layer</p></div>
+
+            <!-- Hero Status Card -->
+            <div class="arena-hero">
+                <div class="arena-hero-top">
+                    <div class="arena-hero-rank-wrap">
+                        <span class="arena-hero-rank-label">RANK</span>
+                        <span class="arena-hero-rank" id="arenaRank">Rookie</span>
+                    </div>
+                    <div class="arena-hero-stats">
+                        <div class="arena-hero-stat"><span class="arena-hero-stat-val" id="arenaStreak">0</span><span class="arena-hero-stat-lbl">Streak</span></div>
+                        <div class="arena-hero-stat"><span class="arena-hero-stat-val" id="arenaSplit">0/5</span><span class="arena-hero-stat-lbl">Split</span></div>
+                    </div>
+                </div>
+                <div class="arena-xp-row">
+                    <span class="arena-xp-label">XP</span>
+                    <div class="arena-xp-bar-wrap"><div class="arena-xp-bar" id="arenaXPBar"></div></div>
+                    <span class="arena-xp-val"><span id="arenaXP">0</span> / <span id="arenaXPNext">200</span></span>
+                </div>
+                <p class="arena-status-line" id="arenaStatusLine">Start your first session.</p>
+            </div>
+
+            <!-- Weekly Split Tracker -->
+            <div class="arena-section-label">WEEKLY SPLIT</div>
+            <div class="arena-split-tracker" id="arenaSplitTracker"></div>
+
+            <!-- Daily Missions -->
+            <div class="arena-section-label">DAILY MISSIONS</div>
+            <div class="arena-missions" id="arenaMissions"></div>
+
+            <!-- Featured Challenge -->
+            <div class="arena-section-label">FEATURED CHALLENGE</div>
+            <div class="arena-featured-card" id="arenaFeatured"></div>
+
+            <!-- Weekly Challenges -->
+            <div class="arena-section-label">WEEKLY CHALLENGES</div>
+            <div class="arena-challenges" id="arenaChallenges"></div>
+
+            <!-- Badges -->
+            <div class="arena-section-label">BADGES</div>
+            <div class="arena-badges-grid" id="arenaBadges"></div>
+
+            <!-- XP Toast -->
+            <div class="arena-toast" id="arenaToast"></div>
         </div>
 
         <!-- HISTORY -->
@@ -451,7 +590,7 @@
     <nav class="bottom-nav">
         <button class="bnav" data-page="intel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg><span>Intel</span></button>
         <button class="bnav active" data-page="execute"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg><span>Execute</span></button>
-        <button class="bnav" data-page="progress"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg><span>Progress</span></button>
+        <button class="bnav" data-page="arena"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><span>Arena</span></button>
         <button class="bnav" data-page="history"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span>History</span></button>
         <button class="bnav" data-page="settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg><span>Settings</span></button>
     </nav>
@@ -471,6 +610,20 @@
                 <button class="confirm-cancel" id="confirmCancel">Cancel</button>
                 <button class="confirm-ok" id="confirmOk">End & Save</button>
             </div>
+        </div>
+    </div>
+
+    <!-- Arena Reward Overlay -->
+    <div class="arena-reward-overlay hidden" id="arenaRewardOverlay">
+        <div class="arena-reward-box">
+            <div class="arena-reward-header">
+                <span class="arena-reward-title">SESSION COMPLETE</span>
+                <span class="arena-reward-total" id="arenaRewardTotal">+0 XP</span>
+            </div>
+            <div class="arena-reward-items" id="arenaRewardItems"></div>
+            <div class="arena-reward-rank" id="arenaRewardRank"></div>
+            <div class="arena-xp-bar-wrap" style="margin:12px 0 16px"><div class="arena-xp-bar" id="arenaXPBar2"></div></div>
+            <button class="arena-reward-close" onclick="document.getElementById('arenaRewardOverlay').classList.add('hidden');app.vib(10)">Continue</button>
         </div>
     </div>
 
