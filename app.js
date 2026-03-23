@@ -364,43 +364,83 @@ class IronPump {
 
     // ─── BODY WEIGHT PAGE ───
     setupWeight(){
-        document.getElementById('bwSave').addEventListener('click',()=>{
-            const val=parseFloat(document.getElementById('bwInput').value);
-            if(!val||val<20||val>300){alert('Enter a valid weight (20–300 kg)');return;}
+        this.wheel=new WheelPicker(this.sound,this.vib.bind(this));
+        document.getElementById('bwWeightTap').addEventListener('click',()=>{
+            const unit=localStorage.getItem('ip_bw_unit')||'kg';
             const logs=JSON.parse(localStorage.getItem('ip_bw')||'[]');
-            logs.push({weight:val,date:new Date().toISOString()});
-            localStorage.setItem('ip_bw',JSON.stringify(logs));
-            document.getElementById('bwInput').value='';
-            this.renderWeight();this.sound.play('finish');this.vib(20);
+            let current=null;
+            if(logs.length>0){
+                const kg=logs[logs.length-1].weight;
+                current=unit==='lbs'?parseFloat((kg*2.20462).toFixed(1)):kg;
+            }
+            this.wheel.openWeight(unit,current,(val,u)=>{
+                const kg=u==='lbs'?parseFloat((val/2.20462).toFixed(2)):val;
+                localStorage.setItem('ip_bw_unit',u);
+                const allLogs=JSON.parse(localStorage.getItem('ip_bw')||'[]');
+                allLogs.push({weight:kg,date:new Date().toISOString()});
+                localStorage.setItem('ip_bw',JSON.stringify(allLogs));
+                this.renderWeight();this.vib(25);
+            });
         });
-        // Height save
-        const heightSave=document.getElementById('heightSave');
-        if(heightSave)heightSave.addEventListener('click',()=>{
-            const val=parseFloat(document.getElementById('heightInput').value);
-            if(!val||val<100||val>250){alert('Enter a valid height (100–250 cm)');return;}
-            localStorage.setItem('ip_height',val);
-            document.getElementById('heightInput').value='';
-            this.renderWeight();this.sound.play('finish');this.vib(15);
+        document.getElementById('bwHeightTap').addEventListener('click',()=>{
+            const unit=localStorage.getItem('ip_height_unit')||'cm';
+            let current=null;
+            const saved=localStorage.getItem('ip_height');
+            if(saved){
+                const cm=parseFloat(saved);
+                current=unit==='ft'?{ft:Math.floor(cm/2.54/12),inch:Math.round((cm/2.54)%12)}:cm;
+            }
+            this.wheel.openHeight(unit,current,(val,u)=>{
+                const cm=u==='ft'?parseFloat(((val.ft*12+val.inch)*2.54).toFixed(1)):val;
+                localStorage.setItem('ip_height',cm);
+                localStorage.setItem('ip_height_unit',u);
+                this.renderWeight();this.vib(20);
+            });
         });
-        // Pre-fill saved height
-        const savedH=localStorage.getItem('ip_height');
-        if(savedH){const el=document.getElementById('heightInput');if(el)el.placeholder=savedH+' cm';}
     }
 
     renderWeight(){
         const logs=JSON.parse(localStorage.getItem('ip_bw')||'[]');
         const height=parseFloat(localStorage.getItem('ip_height')||'0');
+        const bwUnit=localStorage.getItem('ip_bw_unit')||'kg';
+        const htUnit=localStorage.getItem('ip_height_unit')||'cm';
+
+        // ── Update tap buttons ──
+        const wDisp=document.getElementById('bwWeightDisplay');
+        const wUnit=document.getElementById('bwWeightUnit');
+        const hDisp=document.getElementById('bwHeightDisplay');
+        const hUnit=document.getElementById('bwHeightUnit');
+        if(wUnit)wUnit.textContent=bwUnit;
+        if(htUnit==='ft'&&hUnit)hUnit.textContent='ft / in';
+        else if(hUnit)hUnit.textContent='cm';
+
+        if(logs.length>0){
+            const kg=logs[logs.length-1].weight;
+            const displayW=bwUnit==='lbs'?parseFloat((kg*2.20462).toFixed(1)):kg;
+            if(wDisp)wDisp.textContent=displayW;
+        } else {if(wDisp)wDisp.textContent='—';}
+
+        if(height>0){
+            let hDisplay;
+            if(htUnit==='ft'){
+                const totalIn=height/2.54;
+                hDisplay=Math.floor(totalIn/12)+"' "+Math.round(totalIn%12)+'"';
+            } else {hDisplay=height+' cm';}
+            if(hDisp)hDisp.textContent=height>0?hDisplay:'—';
+        } else {if(hDisp)hDisp.textContent='—';}
 
         // ── Hero stats ──
         if(logs.length>0){
             const latest=logs[logs.length-1];
             const first=logs[0];
-            const totalDiff=parseFloat((latest.weight-first.weight).toFixed(1));
-            const sign=totalDiff>0?'+':'';
-            const diffColor=totalDiff<0?'var(--green)':totalDiff>0?'var(--red)':'var(--text3)';
-            document.getElementById('bwCurrentVal').textContent=latest.weight+' kg';
+            const totalDiffKg=parseFloat((latest.weight-first.weight).toFixed(1));
+            const sign=totalDiffKg>0?'+':'';
+            const diffColor=totalDiffKg<0?'var(--green)':totalDiffKg>0?'var(--red)':'var(--text3)';
+            const displayW=bwUnit==='lbs'?parseFloat((latest.weight*2.20462).toFixed(1)):latest.weight;
+            document.getElementById('bwCurrentVal').textContent=displayW+(bwUnit==='lbs'?' lbs':' kg');
             const changeEl=document.getElementById('bwChangeVal');
-            changeEl.textContent=sign+totalDiff+' kg';
+            const diffDisplay=bwUnit==='lbs'?parseFloat((totalDiffKg*2.20462).toFixed(1)):totalDiffKg;
+            changeEl.textContent=(diffDisplay>0?'+':'')+diffDisplay+(bwUnit==='lbs'?' lbs':' kg');
             changeEl.style.color=diffColor;
         } else {
             document.getElementById('bwCurrentVal').textContent='—';
@@ -410,22 +450,6 @@ class IronPump {
         // Log streak
         const streak=this.calcLogStreak(logs);
         document.getElementById('bwStreakVal').textContent=streak;
-
-        // Height setup card — show saved or input
-        const setupCard=document.getElementById('bwSetupCard');
-        if(height>0){
-            setupCard.innerHTML=`<div class="bw-setup-row">
-                <div class="bw-setup-left">
-                    <span class="bw-setup-label">Height</span>
-                    <span class="bw-setup-val">${height} cm</span>
-                </div>
-                <button class="bw-setup-save" id="heightEditBtn">Edit</button>
-            </div>`;
-            const editBtn=document.getElementById('heightEditBtn');
-            if(editBtn)editBtn.addEventListener('click',()=>{
-                localStorage.removeItem('ip_height');this.renderWeight();this.sound.play('tap');
-            });
-        }
 
         // ── BMI ──
         const bmiCard=document.getElementById('bwBmiCard');
@@ -838,3 +862,347 @@ class IronPump {
 }
 
 const app=new IronPump();
+
+// ═══════════════════════════════════════════════════════════
+// WHEEL PICKER — iOS-style velocity-responsive scroll picker
+// ═══════════════════════════════════════════════════════════
+class WheelPicker {
+    constructor(sound, vib){
+        this.sound=sound;this.vib=vib;
+        this.ctx=null;this.onConfirm=null;this.mode=null;
+        this.cols=[];this.unit='kg';
+        this._lastTickTime=0;this._lastTickIndex=-1;
+        this._setupAudio();this._bindOverlay();
+    }
+
+    _setupAudio(){
+        document.addEventListener('click',()=>{
+            if(!this.ctx)this.ctx=new(window.AudioContext||window.webkitAudioContext)();
+        },{once:true});
+    }
+
+    // Play velocity-responsive tick
+    _tick(velocity=1){
+        if(!this.ctx)return;
+        const now=performance.now();
+        // Throttle: minimum gap between ticks scales with velocity
+        const minGap=Math.max(20,80-(velocity*40));
+        if(now-this._lastTickTime<minGap)return;
+        this._lastTickTime=now;
+        const t=this.ctx.currentTime;
+        const osc=this.ctx.createOscillator();
+        const gain=this.ctx.createGain();
+        const filter=this.ctx.createBiquadFilter();
+        osc.connect(filter);filter.connect(gain);gain.connect(this.ctx.destination);
+        filter.type='bandpass';filter.frequency.value=2800;filter.Q.value=3;
+        // Velocity-responsive pitch and volume
+        const speed=Math.min(velocity,3);
+        const freq=1800+speed*400;
+        const vol=0.04+speed*0.02;
+        const dur=0.018+speed*0.004;
+        osc.type='triangle';
+        osc.frequency.setValueAtTime(freq,t);
+        osc.frequency.exponentialRampToValueAtTime(freq*0.7,t+dur);
+        gain.gain.setValueAtTime(0,t);
+        gain.gain.linearRampToValueAtTime(vol,t+0.002);
+        gain.gain.exponentialRampToValueAtTime(0.001,t+dur);
+        osc.start(t);osc.stop(t+dur+0.005);
+    }
+
+    // Selection snap sound
+    _snap(){
+        if(!this.ctx)return;
+        const t=this.ctx.currentTime;
+        // Two-layer snap: click + soft tone
+        [
+            {f:3200,d:0.012,v:0.06,type:'square'},
+            {f:880,d:0.08,v:0.04,type:'sine'}
+        ].forEach(s=>{
+            const osc=this.ctx.createOscillator();
+            const gain=this.ctx.createGain();
+            osc.connect(gain);gain.connect(this.ctx.destination);
+            osc.type=s.type;osc.frequency.setValueAtTime(s.f,t);
+            if(s.type==='sine')osc.frequency.exponentialRampToValueAtTime(s.f*0.6,t+s.d);
+            gain.gain.setValueAtTime(s.v,t);
+            gain.gain.exponentialRampToValueAtTime(0.001,t+s.d);
+            osc.start(t);osc.stop(t+s.d+0.005);
+        });
+        this.vib(8);
+    }
+
+    _bindOverlay(){
+        document.getElementById('wheelCancel').addEventListener('click',()=>this.close());
+        document.getElementById('wheelConfirm').addEventListener('click',()=>this._confirm());
+        document.getElementById('wheelOverlay').addEventListener('click',(e)=>{
+            if(e.target===document.getElementById('wheelOverlay'))this.close();
+        });
+        // Unit toggle buttons
+        document.getElementById('wheelUnit1').addEventListener('click',(e)=>this._switchUnit(e.target.dataset.unit));
+        document.getElementById('wheelUnit2').addEventListener('click',(e)=>this._switchUnit(e.target.dataset.unit));
+    }
+
+    _switchUnit(unit){
+        if(this.unit===unit)return;
+        this.unit=unit;
+        document.querySelectorAll('.wheel-unit-btn').forEach(b=>{
+            b.classList.toggle('active',b.dataset.unit===unit);
+        });
+        this._rebuildCols();
+        this._snap();
+    }
+
+    open(title,unitOpts,unit,cols,onConfirm){
+        this.onConfirm=onConfirm;this.unit=unit;this.mode=title;
+        document.getElementById('wheelTitle').textContent=title;
+        // Setup unit toggle
+        const u1=document.getElementById('wheelUnit1');
+        const u2=document.getElementById('wheelUnit2');
+        u1.textContent=unitOpts[0];u1.dataset.unit=unitOpts[0];
+        u2.textContent=unitOpts[1];u2.dataset.unit=unitOpts[1];
+        u1.classList.toggle('active',unit===unitOpts[0]);
+        u2.classList.toggle('active',unit===unitOpts[1]);
+        this._colDefs=cols;
+        this._buildCols(cols);
+        document.getElementById('wheelOverlay').classList.remove('hidden');
+        this._updateDisplay();
+    }
+
+    openWeight(unit,currentVal,onConfirm){
+        this._weightUnit=unit;this._heightUnit=null;
+        const colDefs=this._getWeightCols(unit,currentVal);
+        this.open('Body Weight',['kg','lbs'],unit,colDefs,onConfirm);
+    }
+
+    openHeight(unit,currentVal,onConfirm){
+        this._heightUnit=unit;this._weightUnit=null;
+        const colDefs=this._getHeightCols(unit,currentVal);
+        this.open('Height',['cm','ft'],unit,colDefs,onConfirm);
+    }
+
+    _getWeightCols(unit,current){
+        if(unit==='kg'){
+            const wholes=[]; for(let i=20;i<=250;i++)wholes.push(i);
+            const decimals=['0','1','2','3','4','5','6','7','8','9'];
+            let wIdx=wholes.indexOf(current?Math.floor(current):70);if(wIdx<0)wIdx=50;
+            let dIdx=current?Math.round((current%1)*10):0;
+            return [
+                {items:wholes,selected:wIdx,width:2},
+                {items:['.',],selected:0,width:0,fixed:true},
+                {items:decimals,selected:dIdx,width:1}
+            ];
+        } else {
+            const wholes=[]; for(let i=44;i<=551;i++)wholes.push(i);
+            let idx=wholes.indexOf(current?Math.round(current):154);if(idx<0)idx=110;
+            return [{items:wholes,selected:idx,width:3}];
+        }
+    }
+
+    _getHeightCols(unit,current){
+        if(unit==='cm'){
+            const vals=[]; for(let i=100;i<=250;i++)vals.push(i);
+            let idx=vals.indexOf(current?Math.round(current):170);if(idx<0)idx=70;
+            return [{items:vals,selected:idx,width:3}];
+        } else {
+            const feet=[4,5,6,7];
+            const inches=[]; for(let i=0;i<=11;i++)inches.push(i);
+            const ftIdx=current?feet.indexOf(current.ft):1;
+            const inIdx=current?current.inch:0;
+            return [
+                {items:feet,selected:ftIdx<0?1:ftIdx,width:1,suffix:"'"},
+                {items:inches,selected:inIdx,width:2,suffix:'"'}
+            ];
+        }
+    }
+
+    _buildCols(colDefs){
+        const body=document.getElementById('wheelBody');
+        body.innerHTML='';
+        this.cols=[];
+        colDefs.forEach((def,ci)=>{
+            if(def.fixed){
+                const sep=document.createElement('span');
+                sep.className='wheel-sep';sep.textContent='.';
+                body.appendChild(sep);return;
+            }
+            const wrap=document.createElement('div');
+            wrap.className='wheel-col-wrap';
+            const col=document.createElement('div');
+            col.className='wheel-col';
+            const items=document.createElement('div');
+            items.className='wheel-items';
+            // Pad top/bottom so selected item can reach center
+            const pad=2;
+            for(let p=0;p<pad;p++){
+                const ph=document.createElement('div');ph.className='wheel-item';ph.style.opacity='0';
+                items.appendChild(ph);
+            }
+            def.items.forEach((val,i)=>{
+                const el=document.createElement('div');
+                el.className='wheel-item'+(i===def.selected?' selected':'');
+                el.textContent=(def.suffix?val+def.suffix:val);
+                items.appendChild(el);
+            });
+            for(let p=0;p<pad;p++){
+                const ph=document.createElement('div');ph.className='wheel-item';ph.style.opacity='0';
+                items.appendChild(ph);
+            }
+            col.appendChild(items);wrap.appendChild(col);body.appendChild(wrap);
+            const colState={el:col,items:def.items,selected:def.selected,def};
+            this.cols.push(colState);
+            this._initDrag(col,colState,ci);
+            this._scrollToSelected(col,def.selected,false);
+        });
+    }
+
+    _rebuildCols(){
+        const newDefs=this._heightUnit===null
+            ?this._getWeightCols(this.unit,this._getCurrentVal())
+            :this._getHeightCols(this.unit,this._getCurrentVal());
+        this._colDefs=newDefs;
+        this._buildCols(newDefs);
+        this._updateDisplay();
+    }
+
+    _getCurrentVal(){
+        if(this._weightUnit!==null){
+            if(this.unit==='kg'&&this.cols.length>=2){
+                const w=this.cols[0].items[this.cols[0].selected];
+                const d=this.cols[1]?this.cols[1].items[this.cols[1].selected]:0;
+                return parseFloat(w+'.'+d);
+            } else if(this.cols.length>0){
+                return this.cols[0].items[this.cols[0].selected];
+            }
+        } else if(this._heightUnit!==null){
+            if(this.unit==='cm'&&this.cols.length>0)return this.cols[0].items[this.cols[0].selected];
+            if(this.unit==='ft'&&this.cols.length>=2)return{ft:this.cols[0].items[this.cols[0].selected],inch:this.cols[1].items[this.cols[1].selected]};
+        }
+        return null;
+    }
+
+    _initDrag(col,state,colIndex){
+        const itemH=44;
+        let startY=0,lastY=0,lastTime=0,velocity=0,rafId=null,isDragging=false;
+        let momentum=0;
+
+        const getY=e=>e.touches?e.touches[0].clientY:e.clientY;
+
+        const snapToNearest=()=>{
+            const items=col.querySelector('.wheel-items');
+            const transform=new WebKitCSSMatrix(getComputedStyle(items).transform);
+            const currentOffset=-transform.m42;
+            const raw=Math.round(currentOffset/itemH);
+            const idx=Math.max(0,Math.min(raw,state.items.length-1));
+            if(idx!==state.selected){
+                state.selected=idx;
+                this._snap();
+                this._updateSelected(col,idx);
+                this._updateDisplay();
+            } else {
+                this._scrollToSelected(col,idx,true);
+            }
+        };
+
+        const onStart=e=>{
+            e.preventDefault();
+            if(rafId)cancelAnimationFrame(rafId);
+            isDragging=true;
+            startY=getY(e);lastY=startY;lastTime=performance.now();velocity=0;momentum=0;
+            col.style.cursor='grabbing';
+        };
+
+        const onMove=e=>{
+            if(!isDragging)return;
+            e.preventDefault();
+            const y=getY(e);
+            const dy=y-lastY;
+            const dt=performance.now()-lastTime;
+            velocity=dt>0?dy/dt*16:0;
+            lastY=y;lastTime=performance.now();
+            const items=col.querySelector('.wheel-items');
+            const mat=new WebKitCSSMatrix(getComputedStyle(items).transform);
+            let newY=mat.m42+dy;
+            const maxY=0;
+            const minY=-(state.items.length-1)*itemH;
+            newY=Math.max(minY-40,Math.min(maxY+40,newY));
+            items.style.transition='none';
+            items.style.transform=`translateY(${newY}px)`;
+            // Tick sound
+            const approxIdx=Math.round(-newY/itemH);
+            const clampedIdx=Math.max(0,Math.min(approxIdx,state.items.length-1));
+            if(clampedIdx!==this._lastTickIndex){
+                this._lastTickIndex=clampedIdx;
+                const spd=Math.abs(velocity/16);
+                this._tick(Math.min(spd,3));
+            }
+        };
+
+        const onEnd=e=>{
+            if(!isDragging)return;
+            isDragging=false;col.style.cursor='grab';
+            // Momentum flick
+            const items=col.querySelector('.wheel-items');
+            const mat=new WebKitCSSMatrix(getComputedStyle(items).transform);
+            let offset=mat.m42+velocity*6;
+            const maxY=0;const minY=-(state.items.length-1)*itemH;
+            offset=Math.max(minY,Math.min(maxY,offset));
+            const idx=Math.max(0,Math.min(Math.round(-offset/itemH),state.items.length-1));
+            state.selected=idx;
+            this._scrollToSelected(col,idx,true);
+            this._snap();
+            this._updateSelected(col,idx);
+            this._updateDisplay();
+        };
+
+        col.addEventListener('touchstart',onStart,{passive:false});
+        col.addEventListener('touchmove',onMove,{passive:false});
+        col.addEventListener('touchend',onEnd);
+        col.addEventListener('mousedown',onStart);
+        document.addEventListener('mousemove',e=>{if(isDragging)onMove(e);});
+        document.addEventListener('mouseup',e=>{if(isDragging)onEnd(e);});
+    }
+
+    _scrollToSelected(col,idx,animate){
+        const items=col.querySelector('.wheel-items');
+        const offset=-(idx*44);
+        items.style.transition=animate?'transform .35s cubic-bezier(.32,0,.67,0)':'none';
+        items.style.transform=`translateY(${offset}px)`;
+    }
+
+    _updateSelected(col,idx){
+        col.querySelectorAll('.wheel-item').forEach((el,i)=>{
+            // Offset by pad=2
+            el.classList.toggle('selected',i-2===idx);
+        });
+    }
+
+    _updateDisplay(){
+        const disp=document.getElementById('wheelSelectedDisplay');
+        if(!disp)return;
+        const val=this._getCurrentVal();
+        if(val===null){disp.textContent='';return;}
+        if(this._weightUnit!==null){
+            disp.textContent=val+' '+this.unit;
+        } else if(this.unit==='ft'&&val&&typeof val==='object'){
+            disp.textContent=val.ft+"' "+val.inch+'"';
+        } else {
+            disp.textContent=val+' cm';
+        }
+    }
+
+    _confirm(){
+        const val=this._getCurrentVal();
+        if(val!==null&&this.onConfirm)this.onConfirm(val,this.unit);
+        this.close();
+    }
+
+    close(){
+        const overlay=document.getElementById('wheelOverlay');
+        const sheet=document.getElementById('wheelSheet');
+        sheet.style.transition='transform .25s cubic-bezier(.32,0,.67,0)';
+        sheet.style.transform='translateY(100%)';
+        setTimeout(()=>{
+            overlay.classList.add('hidden');
+            sheet.style.transform='';sheet.style.transition='';
+        },260);
+    }
+}
