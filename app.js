@@ -522,7 +522,6 @@ class IronPump {
         const rect=canvas.getBoundingClientRect();
         if(!rect.width||!rect.height)return;
         const ctx=canvas.getContext('2d');const dpr=window.devicePixelRatio||1;
-        const rect=canvas.getBoundingClientRect();
         canvas.width=rect.width*dpr;canvas.height=rect.height*dpr;
         ctx.scale(dpr,dpr);const w=rect.width,h=rect.height;
         const pad={t:24,r:16,b:32,l:48};const cw=w-pad.l-pad.r,ch=h-pad.t-pad.b;
@@ -729,9 +728,9 @@ class IronPump {
     drawChart(){
         const canvas=document.getElementById('volChart');if(!canvas)return;
         const rect=canvas.getBoundingClientRect();
-        if(!rect.width||!rect.height)return; // not visible yet
+        if(!rect.width||!rect.height)return;
         const ctx=canvas.getContext('2d');const dpr=window.devicePixelRatio||1;
-        const rect=canvas.getBoundingClientRect();canvas.width=rect.width*dpr;canvas.height=rect.height*dpr;
+        canvas.width=rect.width*dpr;canvas.height=rect.height*dpr;
         ctx.scale(dpr,dpr);const w=rect.width,h=rect.height;
         const pad={t:20,r:15,b:30,l:45};const cw=w-pad.l-pad.r,ch=h-pad.t-pad.b;
         const wd=this.getChartData();
