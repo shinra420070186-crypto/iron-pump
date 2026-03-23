@@ -98,21 +98,37 @@ class ArenaSystem {
         const bwLogs=JSON.parse(localStorage.getItem('ip_bw')||'[]');
         const todayWorkouts=all.filter(w=>new Date(w.startTime).toDateString()===today);
         const missions=[];
-        if(!bwLogs.some(l=>new Date(l.date).toDateString()===today)){
-            missions.push({id:'log_bw_today',label:'Log Body Weight',desc:'Track your weight today',xp:10,icon:'📊',difficulty:'easy'});
-        } else {
-            missions.push({id:'open_arena',label:'Check Arena',desc:'Review your progress',xp:10,icon:'⚡',difficulty:'easy',auto:true});
-        }
+
+        // Mission 1 — Log Body Weight (only claimable if actually logged today)
+        const bwLoggedToday=bwLogs.some(l=>new Date(l.date).toDateString()===today);
+        missions.push({
+            id:'log_bw_today',
+            label:'Log Body Weight',
+            desc:'Track your weight today',
+            xp:10,icon:'📊',difficulty:'easy',
+            canClaim:bwLoggedToday,
+            auto:false
+        });
+
+        // Mission 2 — Session (only claimable if session actually done)
         if(split.completed<5){
             const pending=['day1','day2','day3','day4','day5'].find(d=>!split.days.includes(d));
-            if(pending){const dayName=PROGRAM.find(p=>p.id===pending)?.name||pending;missions.push({id:'complete_session_'+pending,label:'Execute '+dayName,desc:'Complete your next split session',xp:30,icon:'🔱',difficulty:'medium'});}
+            if(pending){
+                const dayName=PROGRAM.find(p=>p.id===pending)?.name||pending;
+                const sessionDone=todayWorkouts.some(w=>w.dayId===pending);
+                missions.push({id:'complete_session_'+pending,label:'Execute '+dayName,desc:'Complete your next split session',xp:30,icon:'🔱',difficulty:'medium',canClaim:sessionDone,auto:false});
+            }
         } else {
-            missions.push({id:'review_split',label:'Split Review',desc:'All 5 sessions done this week',xp:30,icon:'💎',difficulty:'medium',auto:true});
+            missions.push({id:'review_split',label:'Split Complete',desc:'All 5 sessions done this week',xp:30,icon:'💎',difficulty:'medium',canClaim:true,auto:true});
         }
+
+        // Mission 3 — Performance (only claimable if workout done today with zero skips)
         if(todayWorkouts.length>0){
-            missions.push({id:'beat_volume',label:'Volume King',desc:'Beat your previous session volume',xp:40,icon:'💥',difficulty:'hard',completed:this.checkBeatVolume(all)});
+            const beatVol=this.checkBeatVolume(all);
+            missions.push({id:'beat_volume',label:'Volume King',desc:'Beat your previous session volume',xp:40,icon:'💥',difficulty:'hard',canClaim:beatVol,auto:false});
         } else {
-            missions.push({id:'no_skip',label:'Zero Skips',desc:'Finish all exercises in next session',xp:40,icon:'⚔️',difficulty:'hard'});
+            const noSkipDone=todayWorkouts.length>0&&todayWorkouts[todayWorkouts.length-1]&&!(todayWorkouts[todayWorkouts.length-1].exercises||[]).some(e=>e.skipped);
+            missions.push({id:'no_skip',label:'Zero Skips',desc:'Finish all exercises in next session',xp:40,icon:'⚔️',difficulty:'hard',canClaim:false,auto:false});
         }
         return missions;
     }
@@ -454,7 +470,16 @@ class IronPump {
     stopRest(){if(this.restInt)clearInterval(this.restInt);document.getElementById('restOverlay').classList.add('hidden');}
 
     setupComplete(){
-        document.getElementById('compClose').addEventListener('click',()=>{document.getElementById('completeOverlay').classList.add('hidden');this.sound.play('tap');});
+        document.getElementById('compClose').addEventListener('click',()=>{
+            document.getElementById('completeOverlay').classList.add('hidden');
+            this.sound.play('tap');
+            // Show arena reward after workout complete is dismissed
+            if(this._pendingArenaRewards){
+                const {rewards,rankedUp,newRank}=this._pendingArenaRewards;
+                this._pendingArenaRewards=null;
+                setTimeout(()=>this.showArenaRewards(rewards,rankedUp,newRank),300);
+            }
+        });
         document.getElementById('woFinish').addEventListener('click',()=>{if(!this.workout)return;this.showConfirm();});
         document.getElementById('confirmCancel').addEventListener('click',()=>{document.getElementById('confirmOverlay').classList.add('hidden');this.sound.play('tap');});
         document.getElementById('confirmOk').addEventListener('click',()=>{document.getElementById('confirmOverlay').classList.add('hidden');this.finishWorkout();});
@@ -503,7 +528,9 @@ class IronPump {
                 rewards.push({label:'Mission: '+m.label,xp:m.xp});
             }
         });
-        if(rewards.length)this.showArenaRewards(rewards,r1.rankedUp,r1.rankedUp?r1.newRank:null);
+        if(rewards.length){
+            this._pendingArenaRewards={rewards,rankedUp:r1.rankedUp,newRank:r1.rankedUp?r1.newRank:null};
+        }
     }
 
     showArenaRewards(rewards,rankedUp,newRank){
@@ -666,7 +693,9 @@ class IronPump {
             </div>`;
         }).join('');
         document.getElementById('arenaMissions').innerHTML=missions.map(m=>{
-            const done=this.arena.isMissionComplete(m.id)||(m.auto);
+            const done=this.arena.isMissionComplete(m.id);
+            const claimable=!done&&m.canClaim;
+            const pending=!done&&!m.canClaim;
             return `<div class="arena-mission ${done?'done':''}">
                 <div class="arena-mission-left">
                     <span class="arena-mission-icon">${m.icon}</span>
@@ -674,7 +703,7 @@ class IronPump {
                 </div>
                 <div class="arena-mission-right">
                     <span class="arena-mission-xp">+${m.xp} XP</span>
-                    ${done?'<span class="arena-mission-check">✓</span>':`<button class="arena-claim-btn" onclick="app.claimMission('${m.id}',${m.xp},'${m.label}')">Claim</button>`}
+                    ${done?'<span class="arena-mission-check">✓</span>':claimable?`<button class="arena-claim-btn" onclick="app.claimMission('${m.id}',${m.xp},'${m.label}')">Claim</button>`:'<span class="arena-mission-pending">—</span>'}
                 </div>
             </div>`;
         }).join('');
