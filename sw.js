@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ironpump-v16';
+const CACHE_NAME = 'ironpump-v17';
 const ASSETS = [
     './',
     './index.html',
