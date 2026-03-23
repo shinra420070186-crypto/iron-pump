@@ -1,6 +1,6 @@
 // ═══════════════════════════════════════════════════════════
-// IRON PUMP — Elite Training System v4
-// Arena System + Full Intelligence + History
+// IRON PUMP — Elite Training System v5
+// Clean build — no Arena, premium Body Weight page
 // ═══════════════════════════════════════════════════════════
 
 const PROGRAM = [
@@ -19,16 +19,16 @@ const THEMES = {
 };
 
 class SoundEngine {
-    constructor(){this.ctx=null;this.on=true;document.addEventListener('click',()=>{if(!this.ctx)this.ctx=new(window.AudioContext||window.webkitAudioContext)()},{once:true})}
+    constructor(){this.ctx=null;this.on=true;document.addEventListener('click',()=>{if(!this.ctx)this.ctx=new(window.AudioContext||window.webkitAudioContext)()},{once:true});}
     play(type){
         if(!this.on||!this.ctx)return;
         const now=this.ctx.currentTime,osc=this.ctx.createOscillator(),gain=this.ctx.createGain();
         osc.connect(gain);gain.connect(this.ctx.destination);
-        const S={tap:{f:2200,d:.025,v:.08,t:'sine'},add:{f:1400,d:.06,v:.1,t:'sine'},skip:{f:800,d:.08,v:.06,t:'triangle'},finish:{f:880,d:.2,v:.12,t:'sine'},complete:{f:523,d:.4,v:.15,t:'sine'},back:{f:600,d:.04,v:.06,t:'sine'},delete:{f:400,d:.06,v:.08,t:'sawtooth'},start:{f:660,d:.15,v:.1,t:'sine'},rest:{f:1000,d:.3,v:.12,t:'sine'},pr:{f:880,d:.5,v:.15,t:'sine'}};
+        const S={tap:{f:2200,d:.025,v:.08,t:'sine'},add:{f:1400,d:.06,v:.1,t:'sine'},skip:{f:800,d:.08,v:.06,t:'triangle'},finish:{f:880,d:.2,v:.12,t:'sine'},complete:{f:523,d:.4,v:.15,t:'sine'},back:{f:600,d:.04,v:.06,t:'sine'},start:{f:660,d:.15,v:.1,t:'sine'},rest:{f:1000,d:.3,v:.12,t:'sine'},pr:{f:880,d:.5,v:.15,t:'sine'}};
         const s=S[type]||S.tap;osc.type=s.t;osc.frequency.setValueAtTime(s.f,now);
-        if(type==='complete'){osc.frequency.setValueAtTime(523,now);osc.frequency.setValueAtTime(659,now+.1);osc.frequency.setValueAtTime(784,now+.2)}
+        if(type==='complete'){osc.frequency.setValueAtTime(523,now);osc.frequency.setValueAtTime(659,now+.1);osc.frequency.setValueAtTime(784,now+.2);}
         if(type==='finish')osc.frequency.exponentialRampToValueAtTime(1320,now+s.d);
-        if(type==='pr'){osc.frequency.setValueAtTime(660,now);osc.frequency.setValueAtTime(880,now+.15);osc.frequency.setValueAtTime(1100,now+.3)}
+        if(type==='pr'){osc.frequency.setValueAtTime(660,now);osc.frequency.setValueAtTime(880,now+.15);osc.frequency.setValueAtTime(1100,now+.3);}
         gain.gain.setValueAtTime(s.v,now);gain.gain.exponentialRampToValueAtTime(.001,now+s.d);osc.start(now);osc.stop(now+s.d+.01);
     }
 }
@@ -41,134 +41,7 @@ function createRipple(e,el){
     rip.className='ripple';el.appendChild(rip);setTimeout(()=>rip.remove(),600);
 }
 
-function epley1RM(weight,reps){
-    if(reps===1)return weight;
-    return Math.round(weight*(1+reps/30));
-}
-
-// ═══════════════════════════════════════════════════════════
-// ARENA SYSTEM
-// ═══════════════════════════════════════════════════════════
-const ARENA_RANKS = [
-    {name:'Rookie',     minXP:0,    maxXP:200,  tier:1},
-    {name:'Lifter',     minXP:200,  maxXP:500,  tier:2},
-    {name:'Grinder',    minXP:500,  maxXP:1000, tier:3},
-    {name:'Beast',      minXP:1000, maxXP:2000, tier:4},
-    {name:'Titan',      minXP:2000, maxXP:4000, tier:5},
-    {name:'Monster',    minXP:4000, maxXP:7000, tier:6},
-    {name:'Iron Legend',minXP:7000, maxXP:99999,tier:7}
-];
-
-const ARENA_BADGES = [
-    {id:'first_session',    name:'First Rep',          desc:'Complete your first workout',           icon:'🔱',xp:50, category:'split'},
-    {id:'first_full_week',  name:'Full Week',          desc:'Complete all 5 sessions in a week',     icon:'⚡',xp:150,category:'split'},
-    {id:'perfect_split',    name:'Perfect Split',      desc:'Complete the full split without skips', icon:'💎',xp:200,category:'split'},
-    {id:'ten_sessions',     name:'10 Sessions',        desc:'Log 10 total workouts',                 icon:'🔥',xp:100,category:'split'},
-    {id:'fifty_sessions',   name:'Fifty Strong',       desc:'Log 50 total workouts',                 icon:'⚔️',xp:300,category:'split'},
-    {id:'routine_machine',  name:'Routine Machine',    desc:'Complete 4 full split weeks',           icon:'🏛️',xp:250,category:'split'},
-    {id:'shift_survivor',   name:'Shift Survivor',     desc:'Complete a week with shifted days',     icon:'🛡️',xp:75, category:'adapt'},
-    {id:'no_session_left',  name:'No Session Left',    desc:'Recover from a missed day same week',   icon:'⚡',xp:100,category:'adapt'},
-    {id:'workproof',        name:'Workproof',          desc:'Train 3 weeks straight despite shifts', icon:'🔩',xp:150,category:'adapt'},
-    {id:'first_pr',         name:'First PR',           desc:'Set your first personal record',        icon:'🏆',xp:75, category:'perf'},
-    {id:'ten_prs',          name:'PR Machine',         desc:'Set 10 personal records',               icon:'💥',xp:150,category:'perf'},
-    {id:'volume_beast',     name:'Volume Beast',       desc:'Hit 10,000 kg total volume in a week',  icon:'🦾',xp:200,category:'perf'},
-    {id:'heavy_hitter',     name:'Heavy Hitter',       desc:'Beat your previous session volume',     icon:'💪',xp:50, category:'perf'},
-    {id:'streak_3',         name:'On Fire',            desc:'Maintain a 3-day streak',               icon:'🔥',xp:50, category:'streak'},
-    {id:'streak_7',         name:'Week Warrior',       desc:'Maintain a 7-day streak',               icon:'⚡',xp:100,category:'streak'},
-    {id:'streak_14',        name:'Iron Will',          desc:'Maintain a 14-day streak',              icon:'💎',xp:200,category:'streak'},
-    {id:'log_weight_5',     name:'Body Tracker',       desc:'Log bodyweight 5 times',                icon:'📊',xp:50, category:'consist'},
-    {id:'consistency_machine',name:'Consistency Machine',desc:'Train 3 weeks with 4+ sessions each',icon:'⚙️',xp:200,category:'consist'},
-];
-
-class ArenaSystem {
-    constructor(){this.data=this.load();}
-    load(){const s=localStorage.getItem('ip_arena');if(s)return JSON.parse(s);return{xp:0,badges:[],lastMissionReset:null,completedMissions:[],weeklyXP:0,weekStart:null,claimedRewards:[]};}
-    save(){localStorage.setItem('ip_arena',JSON.stringify(this.data));}
-    getRank(){const xp=this.data.xp;for(let i=ARENA_RANKS.length-1;i>=0;i--){if(xp>=ARENA_RANKS[i].minXP)return ARENA_RANKS[i];}return ARENA_RANKS[0];}
-    getNextRank(){const rank=this.getRank();const idx=ARENA_RANKS.findIndex(r=>r.name===rank.name);return ARENA_RANKS[idx+1]||null;}
-    addXP(amount,reason){const oldRank=this.getRank();this.data.xp+=amount;this.data.weeklyXP=(this.data.weeklyXP||0)+amount;const newRank=this.getRank();this.save();if(oldRank.name!==newRank.name)return{rankedUp:true,newRank:newRank.name,xpGained:amount,reason};return{rankedUp:false,xpGained:amount,reason};}
-    unlockBadge(badgeId){if(this.data.badges.includes(badgeId))return null;const badge=ARENA_BADGES.find(b=>b.id===badgeId);if(!badge)return null;this.data.badges.push(badgeId);this.addXP(badge.xp,'Badge: '+badge.name);this.save();return badge;}
-    hasBadge(id){return this.data.badges.includes(id);}
-    getWeekSessions(all){const now=new Date(),day=now.getDay(),monday=new Date(now);monday.setDate(now.getDate()-(day===0?6:day-1));monday.setHours(0,0,0,0);return all.filter(w=>new Date(w.startTime)>=monday);}
-    getSplitCompletion(all){const week=this.getWeekSessions(all);const completed=['day1','day2','day3','day4','day5'].filter(d=>week.some(w=>w.dayId===d));return{completed:completed.length,total:5,days:completed};}
-    getDailyMissions(all){
-        const today=new Date().toDateString();
-        if(this.data.lastMissionReset!==today){this.data.completedMissions=[];this.data.lastMissionReset=today;this.save();}
-        const split=this.getSplitCompletion(all);
-        const bwLogs=JSON.parse(localStorage.getItem('ip_bw')||'[]');
-        const todayWorkouts=all.filter(w=>new Date(w.startTime).toDateString()===today);
-        const missions=[];
-
-        // Mission 1 — Log Body Weight (only claimable if actually logged today)
-        const bwLoggedToday=bwLogs.some(l=>new Date(l.date).toDateString()===today);
-        missions.push({
-            id:'log_bw_today',
-            label:'Log Body Weight',
-            desc:'Track your weight today',
-            xp:10,icon:'📊',difficulty:'easy',
-            canClaim:bwLoggedToday,
-            auto:false
-        });
-
-        // Mission 2 — Session (only claimable if session actually done)
-        if(split.completed<5){
-            const pending=['day1','day2','day3','day4','day5'].find(d=>!split.days.includes(d));
-            if(pending){
-                const dayName=PROGRAM.find(p=>p.id===pending)?.name||pending;
-                const sessionDone=todayWorkouts.some(w=>w.dayId===pending);
-                missions.push({id:'complete_session_'+pending,label:'Execute '+dayName,desc:'Complete your next split session',xp:30,icon:'🔱',difficulty:'medium',canClaim:sessionDone,auto:false});
-            }
-        } else {
-            missions.push({id:'review_split',label:'Split Complete',desc:'All 5 sessions done this week',xp:30,icon:'💎',difficulty:'medium',canClaim:true,auto:true});
-        }
-
-        // Mission 3 — Performance (only claimable if workout done today with zero skips)
-        if(todayWorkouts.length>0){
-            const beatVol=this.checkBeatVolume(all);
-            missions.push({id:'beat_volume',label:'Volume King',desc:'Beat your previous session volume',xp:40,icon:'💥',difficulty:'hard',canClaim:beatVol,auto:false});
-        } else {
-            const noSkipDone=todayWorkouts.length>0&&todayWorkouts[todayWorkouts.length-1]&&!(todayWorkouts[todayWorkouts.length-1].exercises||[]).some(e=>e.skipped);
-            missions.push({id:'no_skip',label:'Zero Skips',desc:'Finish all exercises in next session',xp:40,icon:'⚔️',difficulty:'hard',canClaim:false,auto:false});
-        }
-        return missions;
-    }
-    checkBeatVolume(all){if(all.length<2)return false;const last=all[all.length-1];const prev=all.slice(0,-1).filter(w=>w.dayId===last.dayId);if(!prev.length)return false;return last.totalVolume>prev[prev.length-1].totalVolume;}
-    getStreak(all){if(!all.length)return 0;const dates=[...new Set(all.map(w=>new Date(w.startTime).toDateString()))].sort((a,b)=>new Date(b)-new Date(a));let streak=1;for(let i=0;i<dates.length-1;i++){if((new Date(dates[i])-new Date(dates[i+1]))/86400000<=1.5)streak++;else break;}return streak;}
-    getWeeklyChallenges(all){
-        const split=this.getSplitCompletion(all);
-        const bwLogs=JSON.parse(localStorage.getItem('ip_bw')||'[]');
-        const weekSessions=this.getWeekSessions(all);
-        const now=new Date(),day=now.getDay(),mon=new Date(now);
-        mon.setDate(now.getDate()-(day===0?6:day-1));mon.setHours(0,0,0,0);
-        return[
-            {id:'perfect_split_week',label:'Perfect Split',desc:'Complete all 5 sessions this week',progress:split.completed,total:5,xp:150,icon:'💎',type:'featured'},
-            {id:'beat_last_week',label:'Volume Surge',desc:'Beat last week total volume',progress:this.getVolumeProgress(all),total:100,xp:100,icon:'📈',type:'performance'},
-            {id:'log_bw_3',label:'Body Tracker',desc:'Log bodyweight 3 times this week',progress:Math.min(bwLogs.filter(l=>new Date(l.date)>=mon).length,3),total:3,xp:50,icon:'📊',type:'discipline'},
-            {id:'no_skip_week',label:'Zero Skips',desc:'Finish all exercises in every session',progress:weekSessions.filter(w=>!(w.exercises||[]).some(e=>e.skipped)).length,total:Math.max(weekSessions.length,1),xp:80,icon:'⚔️',type:'discipline'}
-        ];
-    }
-    getVolumeProgress(all){const now=Date.now();const t=all.filter(w=>new Date(w.startTime).getTime()>now-7*86400000).reduce((a,w)=>a+(w.totalVolume||0),0);const l=all.filter(w=>{const x=new Date(w.startTime).getTime();return x>now-14*86400000&&x<=now-7*86400000;}).reduce((a,w)=>a+(w.totalVolume||0),0);if(!l)return 50;return Math.min(100,Math.round((t/l)*100));}
-    checkAndAwardBadges(all){
-        const nb=[];const split=this.getSplitCompletion(all);const streak=this.getStreak(all);
-        const prs=JSON.parse(localStorage.getItem('ip_prs')||'{}');const bwLogs=JSON.parse(localStorage.getItem('ip_bw')||'[]');
-        const weekVol=all.filter(w=>new Date(w.startTime).getTime()>Date.now()-7*86400000).reduce((a,w)=>a+(w.totalVolume||0),0);
-        if(all.length>=1){const b=this.unlockBadge('first_session');if(b)nb.push(b);}
-        if(all.length>=10){const b=this.unlockBadge('ten_sessions');if(b)nb.push(b);}
-        if(all.length>=50){const b=this.unlockBadge('fifty_sessions');if(b)nb.push(b);}
-        if(split.completed>=5){const b=this.unlockBadge('first_full_week');if(b)nb.push(b);}
-        if(streak>=3){const b=this.unlockBadge('streak_3');if(b)nb.push(b);}
-        if(streak>=7){const b=this.unlockBadge('streak_7');if(b)nb.push(b);}
-        if(streak>=14){const b=this.unlockBadge('streak_14');if(b)nb.push(b);}
-        if(Object.keys(prs).length>=1){const b=this.unlockBadge('first_pr');if(b)nb.push(b);}
-        if(Object.keys(prs).length>=10){const b=this.unlockBadge('ten_prs');if(b)nb.push(b);}
-        if(weekVol>=10000){const b=this.unlockBadge('volume_beast');if(b)nb.push(b);}
-        if(bwLogs.length>=5){const b=this.unlockBadge('log_weight_5');if(b)nb.push(b);}
-        if(this.checkBeatVolume(all)){const b=this.unlockBadge('heavy_hitter');if(b)nb.push(b);}
-        return nb;
-    }
-    completeMission(id){if(this.data.completedMissions.includes(id))return false;this.data.completedMissions.push(id);this.save();return true;}
-    isMissionComplete(id){return this.data.completedMissions.includes(id);}
-}
+function epley1RM(weight,reps){return reps===1?weight:Math.round(weight*(1+reps/30));}
 
 // ═══════════════════════════════════════════════════════════
 // MAIN APP
@@ -179,7 +52,6 @@ class IronPump {
         this.restDur=parseInt(localStorage.getItem('ip_rest_dur'))||120;
         this.restRem=0;this.startTime=null;this.sound=new SoundEngine();
         this.prRecords=JSON.parse(localStorage.getItem('ip_prs')||'{}');
-        this.arena=new ArenaSystem();
         this.init();
     }
 
@@ -200,14 +72,16 @@ class IronPump {
         });
     }
 
+    // ─── Loading ───
     setupLoading(){
         setTimeout(()=>{
             document.getElementById('loader').classList.add('hidden');
             document.getElementById('app').classList.add('loaded');
-            setTimeout(()=>{this.updateIntel();this.drawChart()},400);
+            setTimeout(()=>{this.updateIntel();this.drawChart();},400);
         },2200);
     }
 
+    // ─── Navigation ───
     setupNav(){
         document.querySelectorAll('.bnav').forEach(btn=>{
             btn.addEventListener('click',()=>{
@@ -217,24 +91,19 @@ class IronPump {
                 document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
                 document.getElementById('page-'+page).classList.add('active');
                 window.scrollTo({top:0,behavior:'instant'});
-                if(page==='intel'){this.updateIntel();this.drawChart();this.renderMuscleVolume();}
+                if(page==='intel'){this.updateIntel();setTimeout(()=>this.drawChart(),50);this.renderMuscleVolume();}
                 if(page==='history')this.loadHistory();
-                if(page==='arena')this.renderArena();
+                if(page==='weight')setTimeout(()=>this.renderWeight(),50);
                 this.sound.play('tap');this.vib(10);
             });
         });
     }
 
+    // ─── Back ───
     setupBack(){
         document.getElementById('backBtn').addEventListener('click',()=>{
-            if(this.workout&&this.workout.totalSets>0){if(!confirm('Discard active workout?'))return}
+            if(this.workout&&this.workout.totalSets>0){if(!confirm('Discard active workout?'))return;}
             this.cancelWorkout();this.sound.play('back');this.vib(10);
-        });
-        const bwBack=document.getElementById('bwBackBtn');
-        if(bwBack)bwBack.addEventListener('click',()=>{
-            document.getElementById('bwSubPage').classList.add('hidden');
-            document.getElementById('intelMain').classList.remove('hidden');
-            this.sound.play('back');this.vib(10);
         });
     }
 
@@ -249,6 +118,7 @@ class IronPump {
         document.getElementById('woTimer').textContent='00:00';
     }
 
+    // ─── Days ───
     renderDays(){
         const grid=document.getElementById('dayGrid');if(!grid)return;
         grid.innerHTML=PROGRAM.map((d,i)=>`
@@ -272,23 +142,22 @@ class IronPump {
         });
     }
 
+    // ─── Previous Session ───
     getPrevSession(dayId){
         const all=JSON.parse(localStorage.getItem('ironpump_workouts')||'[]');
         const prev=all.filter(w=>w.dayId===dayId&&w.endTime);
-        if(prev.length<1)return null;
-        return prev[prev.length-1];
+        return prev.length<1?null:prev[prev.length-1];
     }
 
     getPrevSetData(dayId,exName,setIndex){
-        const session=this.getPrevSession(dayId);
-        if(!session)return null;
+        const session=this.getPrevSession(dayId);if(!session)return null;
         const ex=(session.exercises||[]).find(e=>e.name===exName);
         if(!ex||!ex.sets||!ex.sets[setIndex])return null;
         const s=ex.sets[setIndex];
-        if(parseFloat(s.weight)>0&&parseFloat(s.reps)>0)return s;
-        return null;
+        return(parseFloat(s.weight)>0&&parseFloat(s.reps)>0)?s:null;
     }
 
+    // ─── Start Workout ───
     startWorkout(dayId){
         const day=PROGRAM.find(d=>d.id===dayId);if(!day)return;
         this.workout={dayId,dayName:day.name,dayLabel:day.label,splitName:day.name+' — '+day.label,
@@ -316,6 +185,7 @@ class IronPump {
         document.getElementById('woProgress').textContent=wo.exercises.filter(e=>e.completed||e.skipped).length+'/'+wo.exercises.length;
     }
 
+    // ─── Exercise View ───
     renderEx(){
         const c=document.getElementById('exContainer'),wo=this.workout;
         if(this.exIndex>=wo.exercises.length){this.finishWorkout();return;}
@@ -370,10 +240,8 @@ class IronPump {
                 </div>
             </div></div>`;
         const syncCurrent=()=>{
-            const w=document.getElementById('setWeight');
-            const r=document.getElementById('setReps');
-            if(w)ex.sets[si].weight=w.value;
-            if(r)ex.sets[si].reps=r.value;
+            const w=document.getElementById('setWeight');const r=document.getElementById('setReps');
+            if(w)ex.sets[si].weight=w.value;if(r)ex.sets[si].reps=r.value;
         };
         ['setWeight','setReps'].forEach(id=>{
             const el=document.getElementById(id);if(!el)return;
@@ -400,8 +268,7 @@ class IronPump {
         if(skipEl)skipEl.addEventListener('click',()=>{
             syncCurrent();ex.skipped=true;ex.completed=true;
             this.exIndex++;this.updateHeader();this.updateLive();
-            this.sound.play('skip');this.vib(15);
-            setTimeout(()=>this.renderEx(),260);
+            this.sound.play('skip');this.vib(15);setTimeout(()=>this.renderEx(),260);
         });
         const newCard=document.getElementById('activeSetCard');
         if(newCard){
@@ -413,13 +280,9 @@ class IronPump {
 
     updatePRBannerForSet(ex,si){
         const banner=document.getElementById('prBanner');if(!banner)return;
-        const valEl=document.getElementById('prBannerVal');
-        const repsEl=document.getElementById('prBannerReps');
-        const rightEl=document.getElementById('prBannerRight');
+        const valEl=document.getElementById('prBannerVal');const repsEl=document.getElementById('prBannerReps');const rightEl=document.getElementById('prBannerRight');
         if(!valEl||!repsEl)return;
-        const cur=ex.sets[si]||{};
-        const curW=parseFloat(cur.weight)||0;
-        const curR=parseFloat(cur.reps)||0;
+        const cur=ex.sets[si]||{};const curW=parseFloat(cur.weight)||0;const curR=parseFloat(cur.reps)||0;
         const prev=this.getSetPR(ex.name,si);
         if(!prev){valEl.textContent=curW||'—';repsEl.textContent=curR||'—';rightEl.textContent='first time';banner.classList.remove('pr-new');return;}
         const isNew=curW>0&&curR>0&&(curW>prev.weight||(curW===prev.weight&&curR>prev.reps));
@@ -438,7 +301,8 @@ class IronPump {
         this.workout.totalVolume=vol;this.workout.totalSets=sets;
     }
 
-    getSetPR(exName,setIndex){const key=exName+'__set'+setIndex;return this.prRecords[key]||null;}
+    // ─── PR System ───
+    getSetPR(exName,setIndex){return this.prRecords[exName+'__set'+setIndex]||null;}
     saveSetPR(exName,setIndex,weight,reps){
         const key=exName+'__set'+setIndex;const prev=this.prRecords[key];
         if(!prev||weight>prev.weight||(weight===prev.weight&&reps>prev.reps)){
@@ -447,11 +311,11 @@ class IronPump {
         }
     }
 
+    // ─── Rest Timer ───
     setupRest(){
         document.getElementById('restSkip').addEventListener('click',()=>{this.stopRest();this.sound.play('tap');});
         document.getElementById('restAdd30').addEventListener('click',()=>{this.restRem+=30;this.sound.play('add');this.vib(10);});
     }
-
     startRestTimer(){
         this.restRem=this.restDur;const total=this.restDur;
         document.getElementById('restOverlay').classList.remove('hidden');
@@ -459,32 +323,21 @@ class IronPump {
         if(this.restInt)clearInterval(this.restInt);
         this.restInt=setInterval(()=>{this.restRem--;this.updateRestUI(total);if(this.restRem<=0){this.stopRest();this.sound.play('finish');this.vib(50);}},1000);
     }
-
     updateRestUI(total){
         document.getElementById('restTime').textContent=Math.floor(this.restRem/60)+':'+(this.restRem%60).toString().padStart(2,'0');
         const circ=2*Math.PI*90;
         document.getElementById('restRingFill').style.strokeDasharray=circ;
         document.getElementById('restRingFill').style.strokeDashoffset=circ-(this.restRem/total)*circ;
     }
-
     stopRest(){if(this.restInt)clearInterval(this.restInt);document.getElementById('restOverlay').classList.add('hidden');}
 
+    // ─── Finish Workout ───
     setupComplete(){
-        document.getElementById('compClose').addEventListener('click',()=>{
-            document.getElementById('completeOverlay').classList.add('hidden');
-            this.sound.play('tap');
-            // Show arena reward after workout complete is dismissed
-            if(this._pendingArenaRewards){
-                const {rewards,rankedUp,newRank}=this._pendingArenaRewards;
-                this._pendingArenaRewards=null;
-                setTimeout(()=>this.showArenaRewards(rewards,rankedUp,newRank),300);
-            }
-        });
+        document.getElementById('compClose').addEventListener('click',()=>{document.getElementById('completeOverlay').classList.add('hidden');this.sound.play('tap');});
         document.getElementById('woFinish').addEventListener('click',()=>{if(!this.workout)return;this.showConfirm();});
         document.getElementById('confirmCancel').addEventListener('click',()=>{document.getElementById('confirmOverlay').classList.add('hidden');this.sound.play('tap');});
         document.getElementById('confirmOk').addEventListener('click',()=>{document.getElementById('confirmOverlay').classList.add('hidden');this.finishWorkout();});
     }
-
     showConfirm(){document.getElementById('confirmOverlay').classList.remove('hidden');this.sound.play('tap');this.vib(10);}
 
     finishWorkout(){
@@ -507,112 +360,242 @@ class IronPump {
         document.getElementById('liveEx').textContent='0';
         document.getElementById('woTimer').textContent='00:00';
         this.workout=null;this.sound.play('complete');this.vib(40);
-        setTimeout(()=>this.awardWorkoutXP(),300);
     }
 
-    awardWorkoutXP(){
-        const all=JSON.parse(localStorage.getItem('ironpump_workouts')||'[]');
-        if(!all.length)return;
-        const rewards=[];const wo=all[all.length-1];
-        const r1=this.arena.addXP(20,'Workout Logged');
-        rewards.push({label:'Workout Logged',xp:20});
-        const allDone=(wo.exercises||[]).every(e=>e.completed);
-        if(allDone){this.arena.addXP(25,'All Exercises Complete');rewards.push({label:'All Exercises',xp:25});}
-        const newBadges=this.arena.checkAndAwardBadges(all);
-        newBadges.forEach(b=>rewards.push({label:'Badge: '+b.name,xp:b.xp,badge:true}));
-        const missions=this.arena.getDailyMissions(all);
-        missions.forEach(m=>{
-            if(m.auto&&!this.arena.isMissionComplete(m.id)){
-                this.arena.completeMission(m.id);
-                this.arena.addXP(m.xp,'Mission: '+m.label);
-                rewards.push({label:'Mission: '+m.label,xp:m.xp});
-            }
-        });
-        if(rewards.length){
-            this._pendingArenaRewards={rewards,rankedUp:r1.rankedUp,newRank:r1.rankedUp?r1.newRank:null};
-        }
-    }
-
-    showArenaRewards(rewards,rankedUp,newRank){
-        const overlay=document.getElementById('arenaRewardOverlay');if(!overlay)return;
-        const totalXP=rewards.reduce((a,r)=>a+r.xp,0);
-        const rank=this.arena.getRank();const next=this.arena.getNextRank();
-        const pct=next?Math.round(((this.arena.data.xp-rank.minXP)/(next.minXP-rank.minXP))*100):100;
-        document.getElementById('arenaRewardItems').innerHTML=rewards.map((r,i)=>
-            `<div class="arena-reward-item" style="animation:popIn .3s ease ${i*.08}s both">
-                <span class="arena-reward-label">${r.badge?'🏆 ':''}${r.label}</span>
-                <span class="arena-reward-xp">+${r.xp} XP</span>
-            </div>`).join('');
-        document.getElementById('arenaRewardTotal').textContent='+'+totalXP+' XP';
-        document.getElementById('arenaRewardRank').textContent=rankedUp?'🔺 RANKED UP — '+newRank:'Rank: '+rank.name;
-        document.getElementById('arenaXPBar2').style.width=pct+'%';
-        overlay.classList.remove('hidden');
-        this.sound.play('complete');this.vib(30);
-    }
-
+    // ─── BODY WEIGHT PAGE ───
     setupWeight(){
-        const bwBtn=document.getElementById('bwOpenBtn');
-        if(bwBtn)bwBtn.addEventListener('click',()=>{
-            document.getElementById('intelMain').classList.add('hidden');
-            document.getElementById('bwSubPage').classList.remove('hidden');
-            this.renderWeight();this.sound.play('tap');this.vib(10);
-        });
         document.getElementById('bwSave').addEventListener('click',()=>{
             const val=parseFloat(document.getElementById('bwInput').value);
-            if(!val||val<20||val>300){alert('Enter a valid weight (20-300 kg)');return;}
+            if(!val||val<20||val>300){alert('Enter a valid weight (20–300 kg)');return;}
             const logs=JSON.parse(localStorage.getItem('ip_bw')||'[]');
             logs.push({weight:val,date:new Date().toISOString()});
             localStorage.setItem('ip_bw',JSON.stringify(logs));
             document.getElementById('bwInput').value='';
             this.renderWeight();this.sound.play('finish');this.vib(20);
         });
+        // Height save
+        const heightSave=document.getElementById('heightSave');
+        if(heightSave)heightSave.addEventListener('click',()=>{
+            const val=parseFloat(document.getElementById('heightInput').value);
+            if(!val||val<100||val>250){alert('Enter a valid height (100–250 cm)');return;}
+            localStorage.setItem('ip_height',val);
+            document.getElementById('heightInput').value='';
+            this.renderWeight();this.sound.play('finish');this.vib(15);
+        });
+        // Pre-fill saved height
+        const savedH=localStorage.getItem('ip_height');
+        if(savedH){const el=document.getElementById('heightInput');if(el)el.placeholder=savedH+' cm';}
     }
 
     renderWeight(){
         const logs=JSON.parse(localStorage.getItem('ip_bw')||'[]');
-        const cur=document.getElementById('bwCurrent');
-        if(logs.length===0){cur.innerHTML='<div class="bw-current"><span class="bw-label">No weight logged yet</span><span class="bw-value">—</span></div>';}
-        else{
-            const latest=logs[logs.length-1];const prev=logs.length>1?logs[logs.length-2]:null;
-            const diff=prev?(latest.weight-prev.weight).toFixed(1):0;
-            const cls=diff>0?'up':diff<0?'down':'same';const sign=diff>0?'+':'';
-            cur.innerHTML=`<div class="bw-current"><span class="bw-label">Current Weight</span><div><span class="bw-value">${latest.weight} kg</span>${prev?`<span class="bw-change ${cls}">${sign}${diff} kg</span>`:''}</div></div>`;
+        const height=parseFloat(localStorage.getItem('ip_height')||'0');
+
+        // ── Hero stats ──
+        if(logs.length>0){
+            const latest=logs[logs.length-1];
+            const first=logs[0];
+            const totalDiff=parseFloat((latest.weight-first.weight).toFixed(1));
+            const sign=totalDiff>0?'+':'';
+            const diffColor=totalDiff<0?'var(--green)':totalDiff>0?'var(--red)':'var(--text3)';
+            document.getElementById('bwCurrentVal').textContent=latest.weight+' kg';
+            const changeEl=document.getElementById('bwChangeVal');
+            changeEl.textContent=sign+totalDiff+' kg';
+            changeEl.style.color=diffColor;
+        } else {
+            document.getElementById('bwCurrentVal').textContent='—';
+            document.getElementById('bwChangeVal').textContent='—';
         }
+
+        // Log streak
+        const streak=this.calcLogStreak(logs);
+        document.getElementById('bwStreakVal').textContent=streak;
+
+        // Height setup card — show saved or input
+        const setupCard=document.getElementById('bwSetupCard');
+        if(height>0){
+            setupCard.innerHTML=`<div class="bw-setup-row">
+                <div class="bw-setup-left">
+                    <span class="bw-setup-label">Height</span>
+                    <span class="bw-setup-val">${height} cm</span>
+                </div>
+                <button class="bw-setup-save" id="heightEditBtn">Edit</button>
+            </div>`;
+            const editBtn=document.getElementById('heightEditBtn');
+            if(editBtn)editBtn.addEventListener('click',()=>{
+                localStorage.removeItem('ip_height');this.renderWeight();this.sound.play('tap');
+            });
+        }
+
+        // ── BMI ──
+        const bmiCard=document.getElementById('bwBmiCard');
+        if(height>0&&logs.length>0){
+            bmiCard.style.display='block';
+            const w=logs[logs.length-1].weight;
+            const h=height/100;
+            const bmi=parseFloat((w/(h*h)).toFixed(1));
+            let cat,col,desc;
+            if(bmi<18.5){cat='Underweight';col='#00d4ff';desc='Below healthy range. Focus on caloric surplus.';}
+            else if(bmi<25){cat='Normal Weight';col='#00ff88';desc='Healthy BMI range. Keep it up.';}
+            else if(bmi<30){cat='Overweight';col='#ffaa00';desc='Slightly above range. Gradual deficit helps.';}
+            else{cat='Obese';col='#ff4466';desc='Above healthy range. Consult a professional.';}
+            document.getElementById('bwBmiVal').textContent=bmi;
+            document.getElementById('bwBmiVal').style.color=col;
+            document.getElementById('bwBmiCat').textContent=cat;
+            document.getElementById('bwBmiCat').style.color=col;
+            document.getElementById('bwBmiDesc').textContent=desc;
+            const circle=document.getElementById('bwBmiCircle');
+            circle.style.background=`radial-gradient(circle,${col}18,transparent)`;
+            circle.style.border=`2px solid ${col}40`;
+        } else {
+            bmiCard.style.display='none';
+        }
+
+        // ── Rate of Change ──
+        const rateVal=document.getElementById('bwRateVal');
+        const rateSub=document.getElementById('bwRateSub');
+        const rateBadge=document.getElementById('bwRateBadge');
+        if(logs.length>=2){
+            // Use last 2 weeks of data for rate
+            const recent=logs.slice(-14);
+            const first=recent[0];const last=recent[recent.length-1];
+            const days=(new Date(last.date)-new Date(first.date))/(1000*86400)||1;
+            const kgPerWeek=((last.weight-first.weight)/days)*7;
+            const sign=kgPerWeek>0?'+':'';
+            rateVal.textContent=sign+kgPerWeek.toFixed(2)+' kg/week';
+            if(kgPerWeek<-0.1){
+                rateVal.style.color='var(--green)';
+                rateBadge.textContent='Cutting';rateBadge.className='bw-rate-badge cutting';
+                rateSub.textContent='You are in a deficit. Good cutting pace.';
+            } else if(kgPerWeek>0.1){
+                rateVal.style.color='var(--amber)';
+                rateBadge.textContent='Bulking';rateBadge.className='bw-rate-badge bulking';
+                rateSub.textContent='You are gaining weight. Lean bulk in progress.';
+            } else {
+                rateVal.style.color='var(--cyan)';
+                rateBadge.textContent='Stable';rateBadge.className='bw-rate-badge stable';
+                rateSub.textContent='Weight is stable. Maintenance phase.';
+            }
+        } else {
+            rateVal.textContent='—';rateVal.style.color='var(--text4)';
+            rateBadge.textContent='No data';rateBadge.className='bw-rate-badge nodata';
+            rateSub.textContent='Log more entries to see weekly change rate';
+        }
+
+        // ── Chart ──
         this.drawWeightChart(logs);
-        const hist=document.getElementById('bwHistory');
-        if(logs.length===0){hist.innerHTML='';return;}
-        hist.innerHTML='<div class="settings-card"><h3>Weight Log</h3>'+logs.slice().reverse().slice(0,20).map(l=>{
+
+        // ── History ──
+        const histEl=document.getElementById('bwHistoryList');
+        if(logs.length===0){histEl.innerHTML='<p style="text-align:center;color:var(--text4);padding:16px 0">No weight logged yet</p>';return;}
+        const reversed=logs.slice().reverse().slice(0,30);
+        histEl.innerHTML=reversed.map((l,i)=>{
+            const prevEntry=reversed[i+1];
+            const diff=prevEntry?parseFloat((l.weight-prevEntry.weight).toFixed(1)):null;
+            const cls=diff===null?'same':diff>0?'up':diff<0?'down':'same';
+            const sign=diff>0?'+':'';
             const d=new Date(l.date);
-            return `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)"><span style="font-size:.8rem;color:var(--text3)">${d.toLocaleDateString('en-US',{month:'short',day:'numeric'})}</span><span style="font-family:var(--mono);font-weight:600">${l.weight} kg</span></div>`;
-        }).join('')+'</div>';
+            const ds=d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+            return `<div class="bw-history-row" style="animation:popIn .25s ease ${i*.03}s both">
+                <span class="bw-history-date">${ds}</span>
+                <div class="bw-history-right">
+                    ${diff!==null?`<span class="bw-history-diff ${cls}">${sign}${diff}</span>`:''}
+                    <span class="bw-history-weight">${l.weight} kg</span>
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    calcLogStreak(logs){
+        if(!logs.length)return 0;
+        const dates=[...new Set(logs.map(l=>new Date(l.date).toDateString()))].sort((a,b)=>new Date(b)-new Date(a));
+        let streak=1;
+        for(let i=0;i<dates.length-1;i++){
+            if((new Date(dates[i])-new Date(dates[i+1]))/86400000<=1.5)streak++;
+            else break;
+        }
+        return streak;
     }
 
     drawWeightChart(logs){
         const canvas=document.getElementById('bwChart');if(!canvas)return;
+        const rect=canvas.getBoundingClientRect();
+        if(!rect.width||!rect.height)return;
         const ctx=canvas.getContext('2d');const dpr=window.devicePixelRatio||1;
-        const rect=canvas.getBoundingClientRect();canvas.width=rect.width*dpr;canvas.height=rect.height*dpr;
+        const rect=canvas.getBoundingClientRect();
+        canvas.width=rect.width*dpr;canvas.height=rect.height*dpr;
         ctx.scale(dpr,dpr);const w=rect.width,h=rect.height;
-        const pad={t:20,r:15,b:30,l:45};const cw=w-pad.l-pad.r,ch=h-pad.t-pad.b;
-        if(logs.length<2){ctx.fillStyle='rgba(255,255,255,0.3)';ctx.font='13px Space Grotesk';ctx.textAlign='center';ctx.fillText('Log more weights to see trend',w/2,h/2);return;}
+        const pad={t:24,r:16,b:32,l:48};const cw=w-pad.l-pad.r,ch=h-pad.t-pad.b;
+        if(logs.length<2){
+            ctx.fillStyle='rgba(255,255,255,0.25)';ctx.font='13px Space Grotesk';
+            ctx.textAlign='center';ctx.fillText('Log more weights to see trend',w/2,h/2);return;
+        }
         const data=logs.slice(-20).map(l=>l.weight);
         const labels=logs.slice(-20).map(l=>{const d=new Date(l.date);return(d.getMonth()+1)+'/'+d.getDate();});
-        const mx=Math.max(...data)*1.02,mn=Math.min(...data)*.98,range=mx-mn||1;
-        const xS=(i)=>pad.l+(i/(data.length-1))*cw;
+        const rawMax=Math.max(...data),rawMin=Math.min(...data);
+        const padding=(rawMax-rawMin)*0.15||0.5;
+        const mx=rawMax+padding,mn=rawMin-padding,range=mx-mn;
+
+        // Update min/max display
+        const maxEl=document.getElementById('bwChartMax');const minEl=document.getElementById('bwChartMin');
+        if(maxEl)maxEl.textContent='Max '+rawMax+' kg';
+        if(minEl)minEl.textContent='Min '+rawMin+' kg';
+
+        const xS=(i)=>pad.l+(i/(data.length-1||1))*cw;
         const yS=(v)=>pad.t+ch-((v-mn)/range)*ch;
-        ctx.strokeStyle='rgba(255,255,255,0.05)';ctx.lineWidth=1;
-        for(let i=0;i<=4;i++){const y=pad.t+(i/4)*ch;ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(w-pad.r,y);ctx.stroke();
-            ctx.fillStyle='rgba(255,255,255,0.4)';ctx.font='10px JetBrains Mono';ctx.textAlign='right';ctx.fillText((mx-(i/4)*range).toFixed(1),pad.l-8,y+4);}
-        ctx.textAlign='center';labels.forEach((l,i)=>{if(i%Math.ceil(data.length/6)===0)ctx.fillText(l,xS(i),h-8);});
-        const grad=ctx.createLinearGradient(0,pad.t,0,h-pad.b);grad.addColorStop(0,'rgba(0,255,136,0.3)');grad.addColorStop(1,'rgba(0,255,136,0)');
-        ctx.beginPath();ctx.moveTo(xS(0),h-pad.b);for(let i=0;i<data.length;i++)ctx.lineTo(xS(i),yS(data[i]));
+
+        // Grid lines
+        ctx.strokeStyle='rgba(255,255,255,0.04)';ctx.lineWidth=1;
+        for(let i=0;i<=4;i++){
+            const y=pad.t+(i/4)*ch;
+            ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(w-pad.r,y);ctx.stroke();
+            ctx.fillStyle='rgba(255,255,255,0.35)';ctx.font='10px JetBrains Mono';ctx.textAlign='right';
+            ctx.fillText((mx-(i/4)*range).toFixed(1),pad.l-6,y+4);
+        }
+
+        // Date labels
+        ctx.fillStyle='rgba(255,255,255,0.3)';ctx.font='10px JetBrains Mono';ctx.textAlign='center';
+        const step=Math.max(1,Math.ceil(data.length/5));
+        labels.forEach((l,i)=>{if(i%step===0||i===data.length-1)ctx.fillText(l,xS(i),h-8);});
+
+        // Min/Max range band
+        ctx.beginPath();
+        ctx.moveTo(xS(0),yS(rawMax));
+        for(let i=1;i<data.length;i++)ctx.lineTo(xS(i),yS(rawMax));
+        for(let i=data.length-1;i>=0;i--)ctx.lineTo(xS(i),yS(rawMin));
+        ctx.closePath();
+        ctx.fillStyle='rgba(0,255,136,0.04)';ctx.fill();
+
+        // Fill gradient under curve
+        const grad=ctx.createLinearGradient(0,pad.t,0,h-pad.b);
+        grad.addColorStop(0,'rgba(0,255,136,0.25)');grad.addColorStop(1,'rgba(0,255,136,0.0)');
+        ctx.beginPath();ctx.moveTo(xS(0),h-pad.b);
+        for(let i=0;i<data.length;i++)ctx.lineTo(xS(i),yS(data[i]));
         ctx.lineTo(xS(data.length-1),h-pad.b);ctx.closePath();ctx.fillStyle=grad;ctx.fill();
-        ctx.beginPath();ctx.strokeStyle='#00ff88';ctx.lineWidth=3;ctx.lineCap='round';ctx.lineJoin='round';
-        for(let i=0;i<data.length;i++){if(i===0)ctx.moveTo(xS(i),yS(data[i]));else ctx.lineTo(xS(i),yS(data[i]));}ctx.stroke();
-        for(let i=0;i<data.length;i++){const x=xS(i),y=yS(data[i]);
-            ctx.beginPath();ctx.arc(x,y,4,0,Math.PI*2);ctx.fillStyle='rgba(0,255,136,0.2)';ctx.fill();
-            ctx.beginPath();ctx.arc(x,y,3,0,Math.PI*2);ctx.fillStyle='#00ff88';ctx.fill();}
+
+        // Smooth curve using bezier
+        ctx.beginPath();ctx.strokeStyle='#00ff88';ctx.lineWidth=2.5;ctx.lineCap='round';ctx.lineJoin='round';
+        ctx.shadowColor='rgba(0,255,136,0.4)';ctx.shadowBlur=8;
+        for(let i=0;i<data.length;i++){
+            if(i===0){ctx.moveTo(xS(0),yS(data[0]));}
+            else{
+                const cpx=(xS(i-1)+xS(i))/2;
+                ctx.bezierCurveTo(cpx,yS(data[i-1]),cpx,yS(data[i]),xS(i),yS(data[i]));
+            }
+        }
+        ctx.stroke();ctx.shadowBlur=0;
+
+        // Smooth dots with no flicker
+        for(let i=0;i<data.length;i++){
+            const x=xS(i),y=yS(data[i]);
+            ctx.beginPath();ctx.arc(x,y,5,0,Math.PI*2);
+            ctx.fillStyle='rgba(0,255,136,0.15)';ctx.fill();
+            ctx.beginPath();ctx.arc(x,y,2.5,0,Math.PI*2);
+            ctx.fillStyle='#00ff88';ctx.fill();
+        }
     }
 
+    // ─── Muscle Volume ───
     renderMuscleVolume(){
         const all=JSON.parse(localStorage.getItem('ironpump_workouts')||'[]');
         const weekAgo=Date.now()-7*86400000;const muscles={};
@@ -636,6 +619,7 @@ class IronPump {
             </div>`).join('');
     }
 
+    // ─── History ───
     loadHistory(){
         const all=JSON.parse(localStorage.getItem('ironpump_workouts')||'[]');
         const list=document.getElementById('historyList');
@@ -665,93 +649,7 @@ class IronPump {
         }).join('');
     }
 
-    renderArena(){
-        const all=JSON.parse(localStorage.getItem('ironpump_workouts')||'[]');
-        const rank=this.arena.getRank();const next=this.arena.getNextRank();
-        const xp=this.arena.data.xp;
-        const pct=next?Math.round(((xp-rank.minXP)/(next.minXP-rank.minXP))*100):100;
-        const streak=this.arena.getStreak(all);
-        const split=this.arena.getSplitCompletion(all);
-        const missions=this.arena.getDailyMissions(all);
-        const challenges=this.arena.getWeeklyChallenges(all);
-        const remaining=5-split.completed;
-        const statusLine=remaining>0?`${remaining} session${remaining>1?'s':''} away from clearing the split.`:'Split complete. Legendary week.';
-        document.getElementById('arenaRank').textContent=rank.name;
-        document.getElementById('arenaXP').textContent=xp.toLocaleString();
-        document.getElementById('arenaXPNext').textContent=next?(next.minXP).toLocaleString():'MAX';
-        document.getElementById('arenaXPBar').style.width=pct+'%';
-        document.getElementById('arenaStreak').textContent=streak;
-        document.getElementById('arenaSplit').textContent=split.completed+' / 5';
-        document.getElementById('arenaStatusLine').textContent=statusLine;
-        const splitDays=['day1','day2','day3','day4','day5'];
-        const splitLabels=['Day 1','Day 2','Day 3','Day 4','Day 5'];
-        document.getElementById('arenaSplitTracker').innerHTML=splitDays.map((d,i)=>{
-            const done=split.days.includes(d);
-            return `<div class="arena-split-day ${done?'done':'pending'}">
-                <div class="arena-split-dot">${done?'✓':''}</div>
-                <span class="arena-split-label">${splitLabels[i]}</span>
-            </div>`;
-        }).join('');
-        document.getElementById('arenaMissions').innerHTML=missions.map(m=>{
-            const done=this.arena.isMissionComplete(m.id);
-            const claimable=!done&&m.canClaim;
-            const pending=!done&&!m.canClaim;
-            return `<div class="arena-mission ${done?'done':''}">
-                <div class="arena-mission-left">
-                    <span class="arena-mission-icon">${m.icon}</span>
-                    <div><span class="arena-mission-label">${m.label}</span><span class="arena-mission-desc">${m.desc}</span></div>
-                </div>
-                <div class="arena-mission-right">
-                    <span class="arena-mission-xp">+${m.xp} XP</span>
-                    ${done?'<span class="arena-mission-check">✓</span>':claimable?`<button class="arena-claim-btn" onclick="app.claimMission('${m.id}',${m.xp},'${m.label}')">Claim</button>`:'<span class="arena-mission-pending">—</span>'}
-                </div>
-            </div>`;
-        }).join('');
-        const featured=challenges[0];
-        const featPct=Math.min(100,Math.round((featured.progress/featured.total)*100));
-        document.getElementById('arenaFeatured').innerHTML=`
-            <div class="arena-featured-top">
-                <span class="arena-featured-icon">${featured.icon}</span>
-                <div><span class="arena-featured-label">${featured.label}</span><span class="arena-featured-desc">${featured.desc}</span></div>
-                <span class="arena-featured-xp">+${featured.xp} XP</span>
-            </div>
-            <div class="arena-featured-progress">
-                <div class="arena-featured-bar"><div class="arena-featured-fill" style="width:${featPct}%"></div></div>
-                <span class="arena-featured-count">${featured.progress} / ${featured.total}</span>
-            </div>`;
-        document.getElementById('arenaChallenges').innerHTML=challenges.slice(1).map(c=>{
-            const p=Math.min(100,Math.round((c.progress/c.total)*100));
-            return `<div class="arena-challenge">
-                <div class="arena-challenge-top">
-                    <span class="arena-challenge-icon">${c.icon}</span>
-                    <div class="arena-challenge-info"><span class="arena-challenge-label">${c.label}</span><span class="arena-challenge-desc">${c.desc}</span></div>
-                    <span class="arena-challenge-xp">+${c.xp}</span>
-                </div>
-                <div class="arena-bar-wrap">
-                    <div class="arena-bar"><div class="arena-bar-fill" style="width:${p}%"></div></div>
-                    <span class="arena-bar-pct">${c.progress}/${c.total}</span>
-                </div>
-            </div>`;
-        }).join('');
-        document.getElementById('arenaBadges').innerHTML=ARENA_BADGES.map((b,i)=>{
-            const unlocked=this.arena.hasBadge(b.id);
-            return `<div class="arena-badge ${unlocked?'unlocked':'locked'}" style="animation:popIn .25s ease ${i*.03}s both" title="${b.desc}">
-                <span class="arena-badge-icon">${unlocked?b.icon:'🔒'}</span>
-                <span class="arena-badge-name">${b.name}</span>
-            </div>`;
-        }).join('');
-    }
-
-    claimMission(id,xp,label){
-        if(this.arena.isMissionComplete(id)){this.sound.play('skip');return;}
-        this.arena.completeMission(id);
-        this.arena.addXP(xp,'Mission: '+label);
-        this.sound.play('finish');this.vib(20);
-        this.renderArena();
-        const toast=document.getElementById('arenaToast');
-        if(toast){toast.textContent='+'+xp+' XP — '+label;toast.classList.add('show');setTimeout(()=>toast.classList.remove('show'),2000);}
-    }
-
+    // ─── Intelligence ───
     getMonSunWeek(){
         const now=new Date(),day=now.getDay(),monday=new Date(now);
         monday.setDate(now.getDate()-(day===0?6:day-1));monday.setHours(0,0,0,0);
@@ -796,7 +694,7 @@ class IronPump {
         const st=document.getElementById('sesTrend');
         if(st)st.textContent=all.length===0?'No data':avgPerWeek.toFixed(1)+'/week';
         const bsEl=document.getElementById('bestSession');
-        if(bsEl){if(bestSessionVol>0){const d=new Date(bestSessionDate);const ds=d.toLocaleDateString('en-US',{month:'short',day:'numeric'});bsEl.innerHTML=`<span class="intel-extra-val">${Math.round(bestSessionVol).toLocaleString()} kg</span><span class="intel-extra-sub">on ${ds}</span>`;}else{bsEl.innerHTML=`<span class="intel-extra-val">—</span>`;}}
+        if(bsEl){if(bestSessionVol>0){const d=new Date(bestSessionDate);bsEl.innerHTML=`<span class="intel-extra-val">${Math.round(bestSessionVol).toLocaleString()} kg</span><span class="intel-extra-sub">on ${d.toLocaleDateString('en-US',{month:'short',day:'numeric'})}</span>`;}else{bsEl.innerHTML='<span class="intel-extra-val">—</span>';}}
         const fatEl=document.getElementById('fatigueStatus');
         if(fatEl)fatEl.innerHTML=`<span class="intel-extra-val" style="color:${fitnessColor}">${fitnessStatus}</span><span class="intel-extra-sub">vs 4-week avg</span>`;
         this.renderMuscleVolume();
@@ -827,8 +725,11 @@ class IronPump {
         return streak;
     }
 
+    // ─── Volume Chart ───
     drawChart(){
         const canvas=document.getElementById('volChart');if(!canvas)return;
+        const rect=canvas.getBoundingClientRect();
+        if(!rect.width||!rect.height)return; // not visible yet
         const ctx=canvas.getContext('2d');const dpr=window.devicePixelRatio||1;
         const rect=canvas.getBoundingClientRect();canvas.width=rect.width*dpr;canvas.height=rect.height*dpr;
         ctx.scale(dpr,dpr);const w=rect.width,h=rect.height;
@@ -866,6 +767,7 @@ class IronPump {
         return{labels:Object.keys(weeks),values:Object.values(weeks).map(v=>Math.round(v))};
     }
 
+    // ─── Settings ───
     setupSettings(){
         document.querySelectorAll('.theme-btn').forEach(btn=>{
             btn.addEventListener('click',()=>{
@@ -905,6 +807,7 @@ class IronPump {
         const data={workouts:JSON.parse(localStorage.getItem('ironpump_workouts')||'[]'),
             bodyweight:JSON.parse(localStorage.getItem('ip_bw')||'[]'),
             prs:JSON.parse(localStorage.getItem('ip_prs')||'{}'),
+            height:localStorage.getItem('ip_height')||'',
             theme:localStorage.getItem('ip_theme')||'cyan',
             restDur:localStorage.getItem('ip_rest_dur')||'120',
             exportDate:new Date().toISOString()};
@@ -923,6 +826,7 @@ class IronPump {
                 if(data.workouts)localStorage.setItem('ironpump_workouts',JSON.stringify(data.workouts));
                 if(data.bodyweight)localStorage.setItem('ip_bw',JSON.stringify(data.bodyweight));
                 if(data.prs)localStorage.setItem('ip_prs',JSON.stringify(data.prs));
+                if(data.height)localStorage.setItem('ip_height',data.height);
                 if(data.theme){localStorage.setItem('ip_theme',data.theme);this.applyTheme(data.theme);}
                 if(data.restDur){localStorage.setItem('ip_rest_dur',data.restDur);this.restDur=parseInt(data.restDur);}
                 alert('Data imported successfully!');this.loadHistory();this.updateIntel();
