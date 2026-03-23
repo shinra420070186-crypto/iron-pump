@@ -119,6 +119,7 @@ class IronPump {
         this.restDur=parseInt(localStorage.getItem('ip_rest_dur'))||120;
         this.restRem=0;this.startTime=null;this.sound=new SoundEngine();
         this.prRecords=JSON.parse(localStorage.getItem('ip_prs')||'{}');
+        this.arena=new ArenaSystem();
         this.init();
     }
 
@@ -160,7 +161,7 @@ class IronPump {
                 window.scrollTo({top:0,behavior:'instant'});
                 if(page==='intel'){this.updateIntel();this.drawChart();this.renderMuscleVolume()}
                 if(page==='history')this.loadHistory();
-                if(page==='progress')this.renderProgress();
+                if(page==='arena')this.renderArena();
                 this.sound.play('tap');this.vib(10);
             });
         });
@@ -516,6 +517,64 @@ class IronPump {
         document.getElementById('liveEx').textContent='0';
         document.getElementById('woTimer').textContent='00:00';
         this.workout=null;this.sound.play('complete');this.vib(40);
+        // Arena rewards
+        setTimeout(()=>this.awardWorkoutXP(),300);
+    }
+
+    awardWorkoutXP(){
+        const all=JSON.parse(localStorage.getItem('ironpump_workouts')||'[]');
+        if(!all.length)return;
+        const rewards=[];
+        const wo=all[all.length-1];
+
+        // Base XP
+        const r1=this.arena.addXP(20,'Workout Logged');
+        rewards.push({label:'Workout Logged',xp:20});
+
+        // All exercises completed
+        const allDone=(wo.exercises||[]).every(e=>e.completed);
+        if(allDone){this.arena.addXP(25,'All Exercises Complete');rewards.push({label:'All Exercises',xp:25});}
+
+        // PR check
+        const prsBefore=Object.keys(JSON.parse(localStorage.getItem('ip_prs')||'{}')).length;
+        if(prsBefore>0){this.arena.addXP(50,'New PR');rewards.push({label:'New PR Hit',xp:50});}
+
+        // Badge check
+        const newBadges=this.arena.checkAndAwardBadges(all);
+        newBadges.forEach(b=>rewards.push({label:'Badge: '+b.name,xp:b.xp,badge:true}));
+
+        // Mission auto-complete check
+        const missions=this.arena.getDailyMissions(all);
+        missions.forEach(m=>{
+            if(m.auto&&!this.arena.isMissionComplete(m.id)){
+                this.arena.completeMission(m.id);
+                this.arena.addXP(m.xp,'Mission: '+m.label);
+                rewards.push({label:'Mission: '+m.label,xp:m.xp});
+            }
+        });
+
+        if(rewards.length)this.showArenaRewards(rewards,r1.rankedUp,r1.rankedUp?r1.newRank:null);
+    }
+
+    showArenaRewards(rewards,rankedUp,newRank){
+        const overlay=document.getElementById('arenaRewardOverlay');
+        if(!overlay)return;
+        const totalXP=rewards.reduce((a,r)=>a+r.xp,0);
+        const rank=this.arena.getRank();
+        const next=this.arena.getNextRank();
+        const pct=next?Math.round(((this.arena.data.xp-rank.minXP)/(next.minXP-rank.minXP))*100):100;
+
+        document.getElementById('arenaRewardItems').innerHTML=rewards.map((r,i)=>
+            `<div class="arena-reward-item" style="animation:popIn .3s ease ${i*.08}s both">
+                <span class="arena-reward-label">${r.badge?'🏆 ':'+'}${r.label}</span>
+                <span class="arena-reward-xp">+${r.xp} XP</span>
+            </div>`
+        ).join('');
+        document.getElementById('arenaRewardTotal').textContent='+'+totalXP+' XP';
+        document.getElementById('arenaRewardRank').textContent=rankedUp?'🔺 RANKED UP — '+newRank:'Rank: '+rank.name;
+        document.getElementById('arenaXPBar2').style.width=pct+'%';
+        overlay.classList.remove('hidden');
+        this.sound.play('complete');this.vib(30);
     }
 
     // ─── Body Weight ───
@@ -627,7 +686,7 @@ class IronPump {
             const sets=wo.totalSets||0;
             const dur=wo.duration||0;
             return `<div class="history-card" style="animation:popIn .3s ease ${i*.06}s both">
-                <div class="history-top" onclick="this.closest('.history-card').classList.toggle('expanded')">
+                <div class="history-top" onclick="this.closest('.history-card').classList.toggle('expanded');app.vib(8)">
                     <div>
                         <span class="history-split">${wo.splitName||wo.dayName}</span>
                         <span class="history-date">${ds}</span>
@@ -644,57 +703,118 @@ class IronPump {
         }).join('');
     }
 
-    // ─── Progress Page ───
-    renderProgress(){
-        const container=document.getElementById('progressList');
-        if(!container)return;
-        const prs=JSON.parse(localStorage.getItem('ip_prs')||'{}');
-        const exercises={};
-        Object.entries(prs).forEach(([key,val])=>{
-            const match=key.match(/^(.+)__set(\d+)$/);
-            if(!match)return;
-            const name=match[1],setIdx=parseInt(match[2]);
-            if(!exercises[name])exercises[name]=[];
-            exercises[name][setIdx]=val;
-        });
+    // ─── Arena ───
+    renderArena(){
+        const all=JSON.parse(localStorage.getItem('ironpump_workouts')||'[]');
+        const rank=this.arena.getRank();
+        const next=this.arena.getNextRank();
+        const xp=this.arena.data.xp;
+        const pct=next?Math.round(((xp-rank.minXP)/(next.minXP-rank.minXP))*100):100;
+        const streak=this.arena.getStreak(all);
+        const split=this.arena.getSplitCompletion(all);
+        const missions=this.arena.getDailyMissions(all);
+        const challenges=this.arena.getWeeklyChallenges(all);
+        const badges=ARENA_BADGES;
 
-        if(Object.keys(exercises).length===0){
-            container.innerHTML='<div class="no-history"><p>No PRs yet</p><p>Complete workouts to track records!</p></div>';
-            return;
-        }
+        // Status line
+        const remaining=5-split.completed;
+        let statusLine=remaining>0?`${remaining} session${remaining>1?'s':''} away from clearing the split.`:'Split complete. Legendary week.';
 
-        container.innerHTML=Object.entries(exercises).map(([name,sets],i)=>{
-            let best1RM=0;
-            const setsHtml=sets.filter(Boolean).map((s,si)=>{
-                const oneRM=epley1RM(s.weight,s.reps);
-                if(oneRM>best1RM)best1RM=oneRM;
-                const d=new Date(s.date);
-                const ds=d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'2-digit'});
-                return `<div class="pr-set-row">
-                    <span class="pr-set-num">S${si+1}</span>
-                    <span class="pr-set-val">${s.weight}kg × ${s.reps}</span>
-                    <span class="pr-set-1rm">~${oneRM}kg</span>
-                    <span class="pr-set-date">${ds}</span>
-                </div>`;
-            }).join('');
+        // Hero card
+        document.getElementById('arenaRank').textContent=rank.name;
+        document.getElementById('arenaXP').textContent=xp.toLocaleString();
+        document.getElementById('arenaXPNext').textContent=next?(next.minXP).toLocaleString():'MAX';
+        document.getElementById('arenaXPBar').style.width=pct+'%';
+        document.getElementById('arenaStreak').textContent=streak;
+        document.getElementById('arenaSplit').textContent=split.completed+' / 5';
+        document.getElementById('arenaStatusLine').textContent=statusLine;
 
-            return `<div class="pr-ex-card" style="animation:popIn .3s ease ${i*.06}s both">
-                <div class="pr-ex-header" onclick="this.closest('.pr-ex-card').classList.toggle('expanded')">
-                    <div class="pr-ex-header-left">
-                        <span class="pr-ex-name">${name}</span>
-                        <span class="pr-ex-1rm">Est. 1RM: ${best1RM} kg</span>
-                    </div>
-                    <div style="display:flex;align-items:center;gap:8px">
-                        <div class="pr-ex-badge-wrap">
-                            <span class="pr-ex-badge">🏆</span>
-                            <span class="pr-ex-sets-count">${sets.filter(Boolean).length} set${sets.filter(Boolean).length>1?'s':''}</span>
-                        </div>
-                        <svg class="pr-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
-                    </div>
-                </div>
-                <div class="pr-sets-list">${setsHtml}</div>
+        // Weekly split tracker
+        const splitDays=['day1','day2','day3','day4','day5'];
+        const splitLabels=['Day 1','Day 2','Day 3','Day 4','Day 5'];
+        document.getElementById('arenaSplitTracker').innerHTML=splitDays.map((d,i)=>{
+            const done=split.days.includes(d);
+            return `<div class="arena-split-day ${done?'done':'pending'}">
+                <div class="arena-split-dot">${done?'✓':''}</div>
+                <span class="arena-split-label">${splitLabels[i]}</span>
             </div>`;
         }).join('');
+
+        // Missions
+        document.getElementById('arenaMissions').innerHTML=missions.map(m=>{
+            const done=this.arena.isMissionComplete(m.id)||(m.auto);
+            return `<div class="arena-mission ${done?'done':''}">
+                <div class="arena-mission-left">
+                    <span class="arena-mission-icon">${m.icon}</span>
+                    <div>
+                        <span class="arena-mission-label">${m.label}</span>
+                        <span class="arena-mission-desc">${m.desc}</span>
+                    </div>
+                </div>
+                <div class="arena-mission-right">
+                    <span class="arena-mission-xp">+${m.xp} XP</span>
+                    ${done?'<span class="arena-mission-check">✓</span>':`<button class="arena-claim-btn" onclick="app.claimMission('${m.id}',${m.xp},'${m.label}')">Claim</button>`}
+                </div>
+            </div>`;
+        }).join('');
+
+        // Featured challenge
+        const featured=challenges[0];
+        const featPct=Math.min(100,Math.round((featured.progress/featured.total)*100));
+        document.getElementById('arenaFeatured').innerHTML=`
+            <div class="arena-featured-top">
+                <span class="arena-featured-icon">${featured.icon}</span>
+                <div>
+                    <span class="arena-featured-label">${featured.label}</span>
+                    <span class="arena-featured-desc">${featured.desc}</span>
+                </div>
+                <span class="arena-featured-xp">+${featured.xp} XP</span>
+            </div>
+            <div class="arena-featured-progress">
+                <div class="arena-featured-bar"><div class="arena-featured-fill" style="width:${featPct}%"></div></div>
+                <span class="arena-featured-count">${featured.progress} / ${featured.total}</span>
+            </div>`;
+
+        // Weekly challenges
+        document.getElementById('arenaChallenges').innerHTML=challenges.slice(1).map(c=>{
+            const p=Math.min(100,Math.round((c.progress/c.total)*100));
+            return `<div class="arena-challenge">
+                <div class="arena-challenge-top">
+                    <span class="arena-challenge-icon">${c.icon}</span>
+                    <div class="arena-challenge-info">
+                        <span class="arena-challenge-label">${c.label}</span>
+                        <span class="arena-challenge-desc">${c.desc}</span>
+                    </div>
+                    <span class="arena-challenge-xp">+${c.xp}</span>
+                </div>
+                <div class="arena-bar-wrap">
+                    <div class="arena-bar"><div class="arena-bar-fill" style="width:${p}%"></div></div>
+                    <span class="arena-bar-pct">${c.progress}/${c.total}</span>
+                </div>
+            </div>`;
+        }).join('');
+
+        // Badges
+        document.getElementById('arenaBadges').innerHTML=badges.map((b,i)=>{
+            const unlocked=this.arena.hasBadge(b.id);
+            return `<div class="arena-badge ${unlocked?'unlocked':'locked'}" style="animation:popIn .25s ease ${i*.03}s both" title="${b.desc}">
+                <span class="arena-badge-icon">${unlocked?b.icon:'🔒'}</span>
+                <span class="arena-badge-name">${b.name}</span>
+                ${unlocked?'':'<span class="arena-badge-req">'+b.desc+'</span>'}
+            </div>`;
+        }).join('');
+    }
+
+    claimMission(id, xp, label){
+        if(this.arena.isMissionComplete(id)){this.sound.play('skip');return;}
+        this.arena.completeMission(id);
+        const result=this.arena.addXP(xp,'Mission: '+label);
+        this.sound.play('finish');this.vib(20);
+        // Animate XP bar
+        this.renderArena();
+        // Show mini toast
+        const toast=document.getElementById('arenaToast');
+        if(toast){toast.textContent='+'+ xp+' XP — '+label;toast.classList.add('show');setTimeout(()=>toast.classList.remove('show'),2000);}
     }
 
     // ─── Intelligence ───
@@ -928,3 +1048,286 @@ class IronPump {
 }
 
 const app=new IronPump();
+
+// ═══════════════════════════════════════════════════════════
+// ARENA SYSTEM — Elite Performance Layer
+// XP + Ranks + Missions + Challenges + Badges
+// ═══════════════════════════════════════════════════════════
+
+const ARENA_RANKS = [
+    {name:'Rookie',    minXP:0,    maxXP:200,  tier:1},
+    {name:'Lifter',    minXP:200,  maxXP:500,  tier:2},
+    {name:'Grinder',   minXP:500,  maxXP:1000, tier:3},
+    {name:'Beast',     minXP:1000, maxXP:2000, tier:4},
+    {name:'Titan',     minXP:2000, maxXP:4000, tier:5},
+    {name:'Monster',   minXP:4000, maxXP:7000, tier:6},
+    {name:'Iron Legend',minXP:7000,maxXP:99999,tier:7}
+];
+
+const ARENA_BADGES = [
+    // Split badges
+    {id:'first_session',    name:'First Rep',         desc:'Complete your first workout',           icon:'🔱', xp:50,  category:'split'},
+    {id:'first_full_week',  name:'Full Week',         desc:'Complete all 5 sessions in a week',     icon:'⚡', xp:150, category:'split'},
+    {id:'perfect_split',    name:'Perfect Split',     desc:'Complete the full split without skips', icon:'💎', xp:200, category:'split'},
+    {id:'ten_sessions',     name:'10 Sessions',       desc:'Log 10 total workouts',                 icon:'🔥', xp:100, category:'split'},
+    {id:'fifty_sessions',   name:'Fifty Strong',      desc:'Log 50 total workouts',                 icon:'⚔️', xp:300, category:'split'},
+    {id:'routine_machine',  name:'Routine Machine',   desc:'Complete 4 full split weeks',           icon:'🏛️', xp:250, category:'split'},
+    // Adaptability badges
+    {id:'shift_survivor',   name:'Shift Survivor',    desc:'Complete a week with shifted days',     icon:'🛡️', xp:75,  category:'adapt'},
+    {id:'no_session_left',  name:'No Session Left',   desc:'Recover from a missed day same week',   icon:'⚡', xp:100, category:'adapt'},
+    {id:'workproof',        name:'Workproof',         desc:'Train 3 weeks straight despite shifts', icon:'🔩', xp:150, category:'adapt'},
+    // Performance badges
+    {id:'first_pr',         name:'First PR',          desc:'Set your first personal record',        icon:'🏆', xp:75,  category:'perf'},
+    {id:'ten_prs',          name:'PR Machine',        desc:'Set 10 personal records',               icon:'💥', xp:150, category:'perf'},
+    {id:'volume_beast',     name:'Volume Beast',      desc:'Hit 10,000 kg total volume in a week',  icon:'🦾', xp:200, category:'perf'},
+    {id:'heavy_hitter',     name:'Heavy Hitter',      desc:'Beat your previous session volume',     icon:'💪', xp:50,  category:'perf'},
+    // Streak badges
+    {id:'streak_3',         name:'On Fire',           desc:'Maintain a 3-day streak',              icon:'🔥', xp:50,  category:'streak'},
+    {id:'streak_7',         name:'Week Warrior',      desc:'Maintain a 7-day streak',              icon:'⚡', xp:100, category:'streak'},
+    {id:'streak_14',        name:'Iron Will',         desc:'Maintain a 14-day streak',             icon:'💎', xp:200, category:'streak'},
+    // Consistency badges
+    {id:'log_weight_5',     name:'Body Tracker',      desc:'Log bodyweight 5 times',               icon:'📊', xp:50,  category:'consist'},
+    {id:'consistency_machine','name':'Consistency Machine','desc':'Train 3 weeks with 4+ sessions each',icon:'⚙️',xp:200,category:'consist'},
+];
+
+class ArenaSystem {
+    constructor(){
+        this.data = this.load();
+    }
+
+    load(){
+        const saved = localStorage.getItem('ip_arena');
+        if(saved) return JSON.parse(saved);
+        return {
+            xp: 0,
+            badges: [],
+            lastMissionReset: null,
+            completedMissions: [],
+            weeklyXP: 0,
+            weekStart: null,
+            claimedRewards: []
+        };
+    }
+
+    save(){
+        localStorage.setItem('ip_arena', JSON.stringify(this.data));
+    }
+
+    getRank(){
+        const xp = this.data.xp;
+        for(let i = ARENA_RANKS.length-1; i >= 0; i--){
+            if(xp >= ARENA_RANKS[i].minXP) return ARENA_RANKS[i];
+        }
+        return ARENA_RANKS[0];
+    }
+
+    getNextRank(){
+        const rank = this.getRank();
+        const idx = ARENA_RANKS.findIndex(r => r.name === rank.name);
+        return ARENA_RANKS[idx+1] || null;
+    }
+
+    addXP(amount, reason){
+        const oldRank = this.getRank();
+        this.data.xp += amount;
+        this.data.weeklyXP = (this.data.weeklyXP || 0) + amount;
+        const newRank = this.getRank();
+        this.save();
+        // Return rank up info if applicable
+        if(oldRank.name !== newRank.name){
+            return {rankedUp: true, newRank: newRank.name, xpGained: amount, reason};
+        }
+        return {rankedUp: false, xpGained: amount, reason};
+    }
+
+    unlockBadge(badgeId){
+        if(this.data.badges.includes(badgeId)) return null;
+        const badge = ARENA_BADGES.find(b => b.id === badgeId);
+        if(!badge) return null;
+        this.data.badges.push(badgeId);
+        this.addXP(badge.xp, 'Badge: '+badge.name);
+        this.save();
+        return badge;
+    }
+
+    hasBadge(id){ return this.data.badges.includes(id); }
+
+    getWeekSessions(all){
+        const now = new Date();
+        const day = now.getDay();
+        const monday = new Date(now);
+        monday.setDate(now.getDate() - (day===0?6:day-1));
+        monday.setHours(0,0,0,0);
+        return all.filter(w => new Date(w.startTime) >= monday);
+    }
+
+    getSplitCompletion(all){
+        const week = this.getWeekSessions(all);
+        const completed = ['day1','day2','day3','day4','day5'].filter(d =>
+            week.some(w => w.dayId === d)
+        );
+        return {completed: completed.length, total: 5, days: completed};
+    }
+
+    getDailyMissions(all){
+        const today = new Date().toDateString();
+        // Reset missions daily
+        if(this.data.lastMissionReset !== today){
+            this.data.completedMissions = [];
+            this.data.lastMissionReset = today;
+            this.save();
+        }
+
+        const split = this.getSplitCompletion(all);
+        const streak = this.getStreak(all);
+        const bwLogs = JSON.parse(localStorage.getItem('ip_bw')||'[]');
+        const prs = JSON.parse(localStorage.getItem('ip_prs')||'{}');
+        const todayWorkouts = all.filter(w => new Date(w.startTime).toDateString() === today);
+        const isTrainDay = split.completed < 5;
+
+        const missions = [];
+
+        // Mission 1 — Easy
+        if(!bwLogs.some(l => new Date(l.date).toDateString() === today)){
+            missions.push({id:'log_bw_today', label:'Log Body Weight', desc:'Track your weight today', xp:10, icon:'📊', difficulty:'easy'});
+        } else {
+            missions.push({id:'open_arena', label:'Check Arena', desc:'Review your progress', xp:10, icon:'⚡', difficulty:'easy', auto:true});
+        }
+
+        // Mission 2 — Medium
+        if(isTrainDay){
+            const pending = ['day1','day2','day3','day4','day5'].find(d => !split.days.includes(d));
+            if(pending){
+                const dayName = PROGRAM.find(p=>p.id===pending)?.name || pending;
+                missions.push({id:'complete_session_'+pending, label:'Execute '+dayName, desc:'Complete your next split session', xp:30, icon:'🔱', difficulty:'medium'});
+            }
+        } else {
+            missions.push({id:'review_split', label:'Split Review', desc:'All 5 sessions done this week', xp:30, icon:'💎', difficulty:'medium', auto: split.completed>=5});
+        }
+
+        // Mission 3 — Performance
+        if(todayWorkouts.length > 0){
+            missions.push({id:'beat_volume', label:'Volume King', desc:'Beat your previous session volume', xp:40, icon:'💥', difficulty:'hard',
+                completed: this.checkBeatVolume(all)});
+        } else {
+            missions.push({id:'no_skip', label:'Zero Skips', desc:'Finish all exercises in next session', xp:40, icon:'⚔️', difficulty:'hard'});
+        }
+
+        return missions;
+    }
+
+    checkBeatVolume(all){
+        if(all.length < 2) return false;
+        const last = all[all.length-1];
+        const prev = all.slice(0,-1).filter(w=>w.dayId===last.dayId);
+        if(!prev.length) return false;
+        return last.totalVolume > prev[prev.length-1].totalVolume;
+    }
+
+    getStreak(all){
+        if(!all.length) return 0;
+        const dates=[...new Set(all.map(w=>new Date(w.startTime).toDateString()))].sort((a,b)=>new Date(b)-new Date(a));
+        let streak=1;
+        for(let i=0;i<dates.length-1;i++){
+            if((new Date(dates[i])-new Date(dates[i+1]))/86400000<=1.5) streak++;
+            else break;
+        }
+        return streak;
+    }
+
+    getWeeklyChallenges(all){
+        const split = this.getSplitCompletion(all);
+        const bwLogs = JSON.parse(localStorage.getItem('ip_bw')||'[]');
+        const prs = JSON.parse(localStorage.getItem('ip_prs')||'{}');
+        const weekSessions = this.getWeekSessions(all);
+        const prCount = Object.keys(prs).length;
+
+        return [
+            {
+                id:'perfect_split_week',
+                label:'Perfect Split',
+                desc:'Complete all 5 sessions this week',
+                progress: split.completed,
+                total: 5,
+                xp: 150,
+                icon:'💎',
+                type:'featured'
+            },
+            {
+                id:'beat_last_week',
+                label:'Volume Surge',
+                desc:'Beat last week total volume',
+                progress: this.getVolumeProgress(all),
+                total: 100,
+                xp: 100,
+                icon:'📈',
+                type:'performance'
+            },
+            {
+                id:'log_bw_3',
+                label:'Body Tracker',
+                desc:'Log bodyweight 3 times this week',
+                progress: Math.min(bwLogs.filter(l=>{
+                    const now=new Date(),day=now.getDay(),mon=new Date(now);
+                    mon.setDate(now.getDate()-(day===0?6:day-1));mon.setHours(0,0,0,0);
+                    return new Date(l.date)>=mon;
+                }).length, 3),
+                total: 3,
+                xp: 50,
+                icon:'📊',
+                type:'discipline'
+            },
+            {
+                id:'no_skip_week',
+                label:'Zero Skips',
+                desc:'Finish all exercises in every session',
+                progress: weekSessions.filter(w=>!(w.exercises||[]).some(e=>e.skipped)).length,
+                total: Math.max(weekSessions.length, 1),
+                xp: 80,
+                icon:'⚔️',
+                type:'discipline'
+            }
+        ];
+    }
+
+    getVolumeProgress(all){
+        const now = Date.now();
+        const thisWeekVol = all.filter(w=>new Date(w.startTime).getTime()>now-7*86400000).reduce((a,w)=>a+(w.totalVolume||0),0);
+        const lastWeekVol = all.filter(w=>{const t=new Date(w.startTime).getTime();return t>now-14*86400000&&t<=now-7*86400000;}).reduce((a,w)=>a+(w.totalVolume||0),0);
+        if(!lastWeekVol) return 50;
+        return Math.min(100, Math.round((thisWeekVol/lastWeekVol)*100));
+    }
+
+    checkAndAwardBadges(all){
+        const newBadges = [];
+        const split = this.getSplitCompletion(all);
+        const streak = this.getStreak(all);
+        const prs = JSON.parse(localStorage.getItem('ip_prs')||'{}');
+        const bwLogs = JSON.parse(localStorage.getItem('ip_bw')||'[]');
+        const weekVol = all.filter(w=>new Date(w.startTime).getTime()>Date.now()-7*86400000).reduce((a,w)=>a+(w.totalVolume||0),0);
+
+        if(all.length>=1){const b=this.unlockBadge('first_session');if(b)newBadges.push(b);}
+        if(all.length>=10){const b=this.unlockBadge('ten_sessions');if(b)newBadges.push(b);}
+        if(all.length>=50){const b=this.unlockBadge('fifty_sessions');if(b)newBadges.push(b);}
+        if(split.completed>=5){const b=this.unlockBadge('first_full_week');if(b)newBadges.push(b);}
+        if(streak>=3){const b=this.unlockBadge('streak_3');if(b)newBadges.push(b);}
+        if(streak>=7){const b=this.unlockBadge('streak_7');if(b)newBadges.push(b);}
+        if(streak>=14){const b=this.unlockBadge('streak_14');if(b)newBadges.push(b);}
+        if(Object.keys(prs).length>=1){const b=this.unlockBadge('first_pr');if(b)newBadges.push(b);}
+        if(Object.keys(prs).length>=10){const b=this.unlockBadge('ten_prs');if(b)newBadges.push(b);}
+        if(weekVol>=10000){const b=this.unlockBadge('volume_beast');if(b)newBadges.push(b);}
+        if(bwLogs.length>=5){const b=this.unlockBadge('log_weight_5');if(b)newBadges.push(b);}
+        if(this.checkBeatVolume(all)){const b=this.unlockBadge('heavy_hitter');if(b)newBadges.push(b);}
+        return newBadges;
+    }
+
+    completeMission(missionId){
+        if(this.data.completedMissions.includes(missionId)) return false;
+        this.data.completedMissions.push(missionId);
+        this.save();
+        return true;
+    }
+
+    isMissionComplete(id){ return this.data.completedMissions.includes(id); }
+}
+
